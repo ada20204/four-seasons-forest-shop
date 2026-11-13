@@ -5,6 +5,7 @@ import * as THREE from 'three';
  */
 export const sharedUniforms = {
   uTime: { value: 0 },
+  uWindStrength: { value: 1.0 },
   uBackdropTop: { value: new THREE.Color('#fdf5ea') },
   uBackdropMid: { value: new THREE.Color('#faeedf') },
   uBackdropBottom: { value: new THREE.Color('#f1dfc8') },

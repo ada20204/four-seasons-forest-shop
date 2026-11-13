@@ -6,11 +6,11 @@
 
 ## 核心特性
 
-1. **双层错落建筑与微缩岛屿（[createBoutiqueBuilding.js](src/scene/createBoutiqueBuilding.js), [createIslandBase.js](src/scene/createIslandBase.js), [createOutdoorPatio.js](src/scene/createOutdoorPatio.js)）**
+1. **双层错落建筑、四季橱窗换装与微缩岛屿（[createBoutiqueBuilding.js](src/scene/createBoutiqueBuilding.js), [createIslandBase.js](src/scene/createIslandBase.js), [createOutdoorPatio.js](src/scene/createOutdoorPatio.js)）**
    - 深色碎砾石自然边界浮岛、环形天然鹅卵石景石护边与曲折奶霜砂岩步石小径。
-   - 一层深灰叠石砌体墙 + 温润竖向木格栅立面 + 通透玻璃橱窗与挑檐射灯，室内包含木纹地面、双侧挂衣架、收银展示台与礼服人台。
-   - 二层错动挑出白色微灰泥方盒体块 + 全景横窗 + 前侧内置垂蔓花槽。
-   - 右侧户外休闲露台配置奶油布面遮阳伞与木质圆桌椅，四周点缀庭院矮灯柱。
+   - 一层深灰叠石砌体墙 + 温润竖向木格栅立面 + 通透玻璃橱窗与挑檐射灯，室内包含木纹地面、双层（1F/2F）挂衣架、收银展示台叠放毛衣与礼服人台。
+   - **橱窗四季真正换装（`updateWardrobe`）**：春樱柔粉薄纱裙与莫兰迪粉绿挂衣、盛夏米麻轻纱配鼠尾草绿亚麻陈列、金秋焦糖廓形连衣裙搭浅驼色披肩、皑雪象牙礼服配酒红绒面肩部披肩（`LatheGeometry` 立体剪裁，`capeWeight` 平滑显隐与垂坠缩放）及深松绿/勃艮第冬季成衣序列。
+   - 二层错动挑出白色微灰泥方盒体块 + 全景横窗 + 前侧内置垂蔓花槽；右侧户外休闲露台配置奶油布面遮阳伞、木质圆桌椅与带有机明暗微晃的铜框玻璃烛灯（`setCandleWeight` 多谐波微动），四周点缀庭院矮灯柱。
 
 2. **四季轮换与晴昼/暮色/月夜昼夜光影系统（[seasonPresets.js](src/scene/seasonPresets.js), [timePresets.js](src/scene/timePresets.js), [lightingConfig.js](src/scene/lightingConfig.js)）**
    - 支持正交自由组合 **SPRING · 春樱 / SUMMER · 盛夏 / AUTUMN · 金秋 / WINTER · 皑雪** 四季与 **DAY · 晴昼 / DUSK · 暮色 / NIGHT · 月夜** 三个时段，共 `4 × 3 = 12` 种完整时空氛围；可开启「流转」自动进行 28 秒往复日夜渐变，点击`晴昼 ↔ 月夜`也会平滑经过暮色弧线切换。
@@ -26,8 +26,9 @@
    - 四季对应飘落粒子：**夏** 58 粒林间微尘光点（暮色/月夜自动伴生 `44` 粒暖金闪烁萤火虫）、**春** 130 瓣落樱花瓣、**秋** 125 片金红落叶、**冬** 165 片飘雪（支持随时开关）。
    - `AssemblyController` 分 4 个阶段依次落位：Layer 0 岛屿基底与景石 → Layer 1 一层建筑与室内陈设 → Layer 2 二层白墙体块与花槽 → Layer 3 乔木灌木、户外茶座与冬雪（支持“跳过动画 / 重播入场”与 `?noIntro=1`）。
 
-5. **节制自适应 HUD 与性能合批优化（[geometryUtils.js](src/core/geometryUtils.js), [style.css](src/style.css)）**
-   - 通过 `mergeTransformedGeometry` 合并蕨类、玉簪、花穗/绣球灌木及二楼花槽重复叶片，并将地面小型雪包整合为 `InstancedMesh`，将场景渲染 Draw Calls 控制在 `905` 左右。
+5. **GPU 零开销微风动画、节制自适应 HUD 与合批优化（[createBotanicalGarden.js](src/scene/createBotanicalGarden.js), [geometryUtils.js](src/core/geometryUtils.js), [style.css](src/style.css)）**
+   - 通过共享着色器注入 `applyVertexBreeze`（绑定 `uTime` 与分季 `uWindStrength`，春 `1.05` / 夏 `0.95` / 秋 `1.15` / 冬 `0.42` 阻尼），对阔叶乔木、针叶松柏、林间蕨类、薰衣草花穗及二楼垂蔓常春藤（`anchorY` 向下垂摆）施加零额外 Draw Call 的柔和顶点微风晃动。
+   - 通过 `mergeTransformedGeometry` 合并蕨类、玉簪、花穗/绣球灌木及二楼花槽重复叶片，并将地面小型雪包整合为 `InstancedMesh`，将场景渲染 Draw Calls 控制在 `907` 左右。
    - HUD 玻璃态主题随晴昼（暖象牙）、暮色（烟紫珀金）、月夜（深靛琥珀）自适应切换，并在竖屏窄屏下动态适配相机纵向 FOV 与底部三行紧凑胶囊控件条（`390×844` 视口下 HUD 高度 `108px`，占比 `14.2%`，无横向溢出）。
 
 ---
@@ -100,20 +101,25 @@ node scripts/verify-stage2.mjs
 
 ### 已验证运行环境（`npm run build` + `node scripts/verify-stage2.mjs`）
 
-- **构建产物（Vite `6.4.6`）**：`dist/index.html` (`4.61 kB`)、`dist/assets/index-*.css` (`15.17 kB`)、`dist/assets/index-*.js` (`4,962.63 kB`，gzip `3,318.05 kB`) 及全部本地 `.woff`/`.woff2` 字体资源。
+- **构建产物（Vite `6.4.6`）**：`dist/index.html` (`4.61 kB`)、`dist/assets/index-CzzmQq-G.css` (`15.17 kB`)、`dist/assets/index-qmRZQrWF.js` (`4,968.03 kB`，gzip `3,319.97 kB`) 及全部本地 `.woff`/`.woff2` 字体资源。
 - **桌面端渲染与交互（Linux 无头 Firefox WebGL）**：
   - 控制台/页面报错数：`0`（`errors: []`）
   - 组装入场中段态检测：`midAssemblyActive: true`
-  - 轨道拖拽偏移：`dragDelta: 26.704`；滚轮缩放位移：`zoomDelta: 6.082`
+  - 轨道拖拽偏移：`dragDelta: 27.1`；滚轮缩放位移：`zoomDelta: 5.816`
   - 四季粒子统计：`summer: 58`、`spring: 130`、`autumn: 125`、`winter: 165`（关闭清零为 `0`，恢复为 `165`）
+  - 橱窗四季换装检测：
+    - `spring`：主礼服 `#f5bfd2`、腰带 `#b96e84`、`capeVisible: false`
+    - `summer`：主礼服 `#efe4cf`、腰带 `#c49b68`、`capeVisible: false`
+    - `autumn`：主礼服 `#c2834d`、腰带 `#5b341e`、肩部披肩 `#d9ae7e`（`capeWeight: 0.65`, `capeVisible: true`）
+    - `winter`：主礼服 `#f4efe6`、腰带 `#6e262f`、酒红绒面披肩 `#561b24`（`capeWeight: 1`, `capeVisible: true`）
   - 昼夜时段与夏夜萤火虫检测：盛夏月夜 `time: "night"`、`theme: "theme-night"`、`fireflies: 44`，点击流转开关 `autoCycle: true` 进度连续推进，切至 `月夜` 后平滑收敛并自动停止流转
 - **移动端窄屏视口模拟（无头 Firefox `390×844` 竖屏，`winter` + `night`）**：
   - HUD 高度：`108px`（占可视高度 `14.2%`），横向溢出 `hudOverflowX: false`
-  - 帧绘制统计：`calls: 905`，`triangles: 678,162`
+  - 帧绘制统计：`calls: 907`，`triangles: 678,930`
 
 ### 未测试环境说明
 
-- 以上移动端结果基于桌面端浏览器的 `390×844` 响应式视口模拟；**尚未在真实物理触摸终端（iOS Safari / Android Chrome 真机）**上进行双指触控手感、高刷屏功耗与移动端 GPU 实际帧率实测。
+- 以上移动端结果基于桌面端浏览器的 `390×844` 响应式视口模拟；**尚未在真实物理触摸终端（iOS Safari / Android Chrome 真机）**上进行双指触控手感、高刷屏功耗与移动端 GPU 实际帧率实测；GPU 顶点微风晃动与露台烛火明暗微晃已确认静态渲染与着色器编译无报错，尚未单独录制动态视频帧比对。
 
 ---
 

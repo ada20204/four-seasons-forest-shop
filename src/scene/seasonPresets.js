@@ -29,6 +29,16 @@ export const SEASON_PRESETS = {
     interiorBoost: 1.06,
     snowWeight: 0.0,
     autumnLitterWeight: 0.0,
+    windStrength: 1.05,
+    wardrobe: {
+      dress: '#f5bfd2',
+      belt: '#b96e84',
+      capeColor: '#edd0db',
+      capeWeight: 0.0,
+      fabricRoughness: 0.72,
+      racks: ['#e68eae', '#f7f0e6', '#8eb68a', '#9c98c6', '#cfb89b', '#c97892'],
+      folded: ['#f2cbd9', '#9ab898', '#f7f3ec'],
+    },
     // Botanical palettes
     canopyPalettes: [
       { outer: '#fff0f6', mid: '#ffb6d3', deep: '#d66692' }, // Left Hero Sakura
@@ -79,6 +89,16 @@ export const SEASON_PRESETS = {
     interiorBoost: 1.0,
     snowWeight: 0.0,
     autumnLitterWeight: 0.0,
+    windStrength: 0.95,
+    wardrobe: {
+      dress: '#efe4cf',
+      belt: '#c49b68',
+      capeColor: '#e8decb',
+      capeWeight: 0.0,
+      fabricRoughness: 0.80,
+      racks: ['#7b8d72', '#e6dccb', '#c49b6a', '#474c52', '#b8826e', '#9ba394'],
+      folded: ['#d8ccb8', '#8b9980', '#efe8dc'],
+    },
     canopyPalettes: [
       { outer: '#cdf058', mid: '#6fb639', deep: '#234a1f' },
       { outer: '#c5eb55', mid: '#68b036', deep: '#22471d' },
@@ -128,6 +148,16 @@ export const SEASON_PRESETS = {
     interiorBoost: 1.12,
     snowWeight: 0.0,
     autumnLitterWeight: 1.0,
+    windStrength: 1.15,
+    wardrobe: {
+      dress: '#c2834d',
+      belt: '#5b341e',
+      capeColor: '#d9ae7e',
+      capeWeight: 0.65,
+      fabricRoughness: 0.84,
+      racks: ['#5c6848', '#bf7d46', '#eadac2', '#a65038', '#6b4c3b', '#cfa04a'],
+      folded: ['#cfa06c', '#7a4b36', '#ecdcc5'],
+    },
     canopyPalettes: [
       { outer: '#fff44c', mid: '#ffa814', deep: '#ba420a' }, // Left Hero Golden Maple
       { outer: '#ffe442', mid: '#f88d10', deep: '#ac380a' }, // Rear-Right Warm Amber
@@ -177,6 +207,16 @@ export const SEASON_PRESETS = {
     interiorBoost: 1.92, // Rich warm boutique glow contrasting snowy exteriors!
     snowWeight: 1.0,
     autumnLitterWeight: 0.0,
+    windStrength: 0.42,
+    wardrobe: {
+      dress: '#f4efe6',
+      belt: '#6e262f',
+      capeColor: '#561b24',
+      capeWeight: 1.0,
+      fabricRoughness: 0.86,
+      racks: ['#2f4a3b', '#f2ece0', '#b68456', '#363b44', '#63222b', '#6d8299'],
+      folded: ['#5c1e27', '#2f4a3b', '#f2ece0'],
+    },
     canopyPalettes: [
       { outer: '#b8cbb0', mid: '#566e4e', deep: '#263624' },
       { outer: '#b4c6ac', mid: '#526a4a', deep: '#243422' },

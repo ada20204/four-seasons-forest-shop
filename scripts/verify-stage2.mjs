@@ -119,8 +119,9 @@ async function run() {
       throw new Error(`Assembly finish check failed: ${JSON.stringify(finishedState)}`);
     }
 
-    // 1. Capture all 4 seasons from default overview & inspect particle counts
+    // 1. Capture all 4 seasons from default overview & inspect particle counts + wardrobe changes
     const particleCounts = {};
+    const wardrobes = {};
     for (const season of ['summer', 'spring', 'autumn', 'winter']) {
       await exec(
         sessionId,
@@ -129,11 +130,34 @@ async function run() {
       );
       await new Promise((r) => setTimeout(r, 550));
       particleCounts[season] = await exec(sessionId, `return window.__STAGE2__.getParticleCount();`);
+      wardrobes[season] = await exec(sessionId, `return window.__STAGE2__.getWardrobeState();`);
       if (particleCounts[season] <= 0) {
         throw new Error(`Expected active particles for ${season}, got ${particleCounts[season]}`);
       }
       await snap(sessionId, `${season}-overview.png`);
     }
+
+    if (
+      wardrobes.spring.dressHex === wardrobes.summer.dressHex ||
+      wardrobes.autumn.capeVisible !== true ||
+      wardrobes.winter.capeVisible !== true ||
+      wardrobes.summer.capeVisible !== false ||
+      wardrobes.spring.capeVisible !== false
+    ) {
+      throw new Error(`Seasonal wardrobe validation failed: ${JSON.stringify(wardrobes)}`);
+    }
+
+    // 1b. Capture Spring & Autumn storefront interior close-ups to verify seasonal couture showcase
+    for (const season of ['spring', 'autumn']) {
+      await exec(
+        sessionId,
+        `window.__STAGE2__.setSeason(arguments[0], true); window.__STAGE2__.setView('interior', true);`,
+        [season]
+      );
+      await new Promise((r) => setTimeout(r, 450));
+      await snap(sessionId, `${season}-interior.png`);
+    }
+    await exec(sessionId, `window.__STAGE2__.setSeason('winter', true);`);
 
     // Verify toggling particles OFF -> 0, then ON -> restored
     await exec(sessionId, `window.__STAGE2__.setParticlesEnabled(false);`);
@@ -294,6 +318,7 @@ async function run() {
     const report = {
       midAssemblyActive: midAssemblyState.active,
       particleCounts,
+      wardrobes,
       offCount,
       restoredCount,
       summerNightCheck,

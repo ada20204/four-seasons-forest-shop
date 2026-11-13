@@ -128,14 +128,46 @@ function createShowcaseMannequin(oakMat, brassMat) {
   bodice.castShadow = true;
   g.add(bodice);
 
-  // Subtle belt ribbon
-  const belt = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.112, 0.112, 0.032, 16),
-    new THREE.MeshStandardMaterial({ color: '#c49b68', roughness: 0.6 })
-  );
+  const beltMat = new THREE.MeshStandardMaterial({
+    color: new THREE.Color('#c49b68'),
+    roughness: 0.6,
+  });
+  const belt = new THREE.Mesh(new THREE.CylinderGeometry(0.112, 0.112, 0.032, 16), beltMat);
   belt.scale.set(1.0, 1.0, 0.76);
   belt.position.y = 1.09;
   g.add(belt);
+
+  // Seasonal autumn/winter tailored shoulder capelet built cleanly outside bodice bounds (`LatheGeometry`)
+  const capeMat = new THREE.MeshStandardMaterial({
+    color: new THREE.Color('#561b24'),
+    roughness: 0.78,
+    metalness: 0.02,
+    envMapIntensity: 0.34,
+    side: THREE.DoubleSide,
+  });
+  const capeGroup = new THREE.Group();
+  capeGroup.position.set(0, 1.43, 0);
+  capeGroup.visible = false;
+
+  // Profile ordered bottom-to-top along outer shell so LatheGeometry outward normals (+X x +Y = +Z) face exterior
+  const capeProfile = [
+    new THREE.Vector2(0.176, -0.180), // inner lining hem fold
+    new THREE.Vector2(0.184, -0.220), // rounded bottom hem bevel
+    new THREE.Vector2(0.198, -0.215), // lower cape hem above waist belt
+    new THREE.Vector2(0.190, -0.140), // flared lower silhouette
+    new THREE.Vector2(0.178, -0.075), // sculpted shoulder drape
+    new THREE.Vector2(0.158, -0.015), // clears bodice outer rim (0.14 at y=1.41) cleanly!
+    new THREE.Vector2(0.090, 0.008),  // collarbone slope
+    new THREE.Vector2(0.068, 0.022),  // high collar roll top
+    new THREE.Vector2(0.056, 0.015),  // neck inner edge
+  ];
+  const capeGeo = new THREE.LatheGeometry(capeProfile, 24);
+  capeGeo.computeVertexNormals();
+  const capeMesh = new THREE.Mesh(capeGeo, capeMat);
+  capeMesh.scale.set(1.0, 1.0, 0.80);
+  capeMesh.castShadow = true;
+  capeGroup.add(capeMesh);
+  g.add(capeGroup);
 
   // Neck + sculptural dress form cap
   const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.055, 0.14, 12), formMat);
@@ -146,7 +178,7 @@ function createShowcaseMannequin(oakMat, brassMat) {
   finial.position.y = 1.54;
   g.add(finial);
 
-  return g;
+  return { group: g, dressMat, beltMat, capeMat, capeGroup };
 }
 
 /**
@@ -600,11 +632,9 @@ export function createBoutiqueBuilding() {
 
   // Folded garment stacks atop counter
   const foldColors = ['#d8ccb8', '#8b9980', '#efe8dc'];
-  foldColors.forEach((fc, idx) => {
-    const fold = new THREE.Mesh(
-      new THREE.BoxGeometry(0.28, 0.055, 0.22),
-      new THREE.MeshStandardMaterial({ color: fc, roughness: 0.85 })
-    );
+  const foldMats = foldColors.map((fc) => new THREE.MeshStandardMaterial({ color: fc, roughness: 0.85 }));
+  foldMats.forEach((fMat, idx) => {
+    const fold = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.055, 0.22), fMat);
     fold.position.set(0.22, 0.81 + idx * 0.055, 0.02);
     fold.rotation.y = (idx - 1) * 0.08;
     counterGroup.add(fold);
@@ -625,8 +655,9 @@ export function createBoutiqueBuilding() {
   rackBackRight1F.position.set(1.52, 0.36, -3.15);
   group.add(rackBackRight1F);
 
-  // Front-Right Window Mannequin wearing pleated cream dress
-  const mannequin = createShowcaseMannequin(oakMat, brassMat);
+  // Front-Right Window Mannequin wearing seasonal boutique collection
+  const mannequinObj = createShowcaseMannequin(oakMat, brassMat);
+  const mannequin = mannequinObj.group;
   mannequin.position.set(1.86, 0.36, -0.55);
   mannequin.rotation.y = -0.25;
   group.add(mannequin);
@@ -939,6 +970,51 @@ export function createBoutiqueBuilding() {
     rear2FGlow.material,
   ].map((mat) => ({ mat, baseIntensity: mat.emissiveIntensity }));
 
+  let currentCapeWeight = 0.0;
+  function updateWardrobe(wardrobe) {
+    if (!wardrobe) return;
+    mannequinObj.dressMat.color.set(wardrobe.dress);
+    mannequinObj.dressMat.roughness = wardrobe.fabricRoughness ?? 0.80;
+    mannequinObj.beltMat.color.set(wardrobe.belt);
+    mannequinObj.capeMat.color.set(wardrobe.capeColor);
+
+    const cw = THREE.MathUtils.clamp(wardrobe.capeWeight ?? 0, 0, 1);
+    currentCapeWeight = cw;
+    mannequinObj.capeGroup.visible = cw > 0.05;
+    if (cw > 0.05) {
+      // Keep X/Z >= 1.02 so capelet NEVER clips into bodice during transitions; scale drape length smoothly
+      mannequinObj.capeGroup.scale.set(1.02, 0.42 + cw * 0.58, 1.02);
+    }
+
+    if (wardrobe.racks) {
+      garmentMats.forEach((mat, i) => {
+        if (wardrobe.racks[i]) {
+          mat.color.set(wardrobe.racks[i]);
+          mat.roughness = wardrobe.fabricRoughness ?? 0.82;
+        }
+      });
+    }
+    if (wardrobe.folded) {
+      foldMats.forEach((mat, i) => {
+        if (wardrobe.folded[i]) {
+          mat.color.set(wardrobe.folded[i]);
+          mat.roughness = wardrobe.fabricRoughness ?? 0.85;
+        }
+      });
+    }
+  }
+
+  function getWardrobeState() {
+    return {
+      dressHex: `#${mannequinObj.dressMat.color.getHexString()}`,
+      beltHex: `#${mannequinObj.beltMat.color.getHexString()}`,
+      capeHex: `#${mannequinObj.capeMat.color.getHexString()}`,
+      capeWeight: Number(currentCapeWeight.toFixed(3)),
+      capeVisible: mannequinObj.capeGroup.visible,
+      rackHexes: garmentMats.map((m) => `#${m.color.getHexString()}`),
+    };
+  }
+
   return {
     group,
     floor1Group,
@@ -949,5 +1025,7 @@ export function createBoutiqueBuilding() {
     interiorWallMat,
     bouquetMat,
     indoorLeafMat,
+    updateWardrobe,
+    getWardrobeState,
   };
 }

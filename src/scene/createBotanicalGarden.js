@@ -21,6 +21,47 @@ function createRng(seed = 707070) {
 }
 
 /**
+ * Injects GPU-driven gentle wind sway into botanical foliage/vine materials without extra draw calls.
+ * Respects shared `uWindStrength` (attenuated in winter snow) and supports both merged and instanced meshes.
+ */
+function applyVertexBreeze(
+  mat,
+  { cacheKey, anchorY = 0.24, spanY = 4.0, ampX = 0.04, ampZ = 0.03, speed = 1.25, invertHang = false }
+) {
+  mat.customProgramCacheKey = () => cacheKey;
+  mat.onBeforeCompile = (shader) => {
+    shader.uniforms.uTime = sharedUniforms.uTime;
+    shader.uniforms.uWindStrength = sharedUniforms.uWindStrength;
+    const heightExpr = invertHang
+      ? `clamp( ( ${anchorY.toFixed(3)} - lw.y ) / ${spanY.toFixed(3)}, 0.0, 1.0 )`
+      : `clamp( ( lw.y - ${anchorY.toFixed(3)} ) / ${spanY.toFixed(3)}, 0.0, 1.0 )`;
+
+    shader.vertexShader = shader.vertexShader
+      .replace(
+        '#include <common>',
+        `#include <common>
+        uniform float uTime;
+        uniform float uWindStrength;`
+      )
+      .replace(
+        '#include <begin_vertex>',
+        `#include <begin_vertex>
+        #ifdef USE_INSTANCING
+          vec4 lw = modelMatrix * instanceMatrix * vec4( transformed, 1.0 );
+        #else
+          vec4 lw = modelMatrix * vec4( transformed, 1.0 );
+        #endif
+        float hW = pow( ${heightExpr}, 1.35 ) * uWindStrength;
+        float ph = lw.x * 0.72 + lw.z * 0.62 + lw.y * 0.35;
+        float sway = sin( uTime * ${speed.toFixed(3)} + ph ) * 0.65 + sin( uTime * ${(speed * 1.72).toFixed(3)} + ph * 1.5 ) * 0.35;
+        transformed.x += sway * ${ampX.toFixed(4)} * hW;
+        transformed.z += cos( uTime * ${(speed * 0.84).toFixed(3)} + ph ) * ${ampZ.toFixed(4)} * hW;`
+      );
+  };
+  return mat;
+}
+
+/**
  * Broadleaf tree canopy material using alpha-cutout compound leaf sprays,
  * volumetric vertex shading, and gentle breeze sway.
  */
@@ -36,27 +77,14 @@ function createBroadleafMaterial(leafTex) {
     envMapIntensity: 0.34,
   });
 
-  mat.onBeforeCompile = (shader) => {
-    shader.uniforms.uTime = sharedUniforms.uTime;
-    shader.vertexShader = shader.vertexShader
-      .replace(
-        '#include <common>',
-        `#include <common>
-        uniform float uTime;`
-      )
-      .replace(
-        '#include <begin_vertex>',
-        `#include <begin_vertex>
-        vec4 lw = modelMatrix * vec4( transformed, 1.0 );
-        float hW = clamp( ( lw.y - 1.5 ) / 7.5, 0.0, 1.0 );
-        float ph = lw.x * 0.65 + lw.z * 0.55 + lw.y * 0.35;
-        float sway = sin( uTime * 1.25 + ph ) * 0.65 + sin( uTime * 2.15 + ph * 1.5 ) * 0.35;
-        transformed.x += sway * 0.085 * hW;
-        transformed.z += cos( uTime * 1.05 + ph ) * 0.065 * hW;`
-      );
-  };
-
-  return mat;
+  return applyVertexBreeze(mat, {
+    cacheKey: 'breeze_broadleaf_v2',
+    anchorY: 1.5,
+    spanY: 7.5,
+    ampX: 0.085,
+    ampZ: 0.065,
+    speed: 1.25,
+  });
 }
 
 /**
@@ -316,15 +344,18 @@ function createConiferSpruceTree(needleTex, barkMat, height = 6.2, baseRadius = 
   trunk.castShadow = true;
   g.add(trunk);
 
-  const layerMat = new THREE.MeshStandardMaterial({
-    map: needleTex,
-    color: new THREE.Color('#ffffff'),
-    side: THREE.DoubleSide,
-    alphaTest: 0.34,
-    roughness: 0.82,
-    metalness: 0.0,
-    envMapIntensity: 0.26,
-  });
+  const layerMat = applyVertexBreeze(
+    new THREE.MeshStandardMaterial({
+      map: needleTex,
+      color: new THREE.Color('#ffffff'),
+      side: THREE.DoubleSide,
+      alphaTest: 0.34,
+      roughness: 0.82,
+      metalness: 0.0,
+      envMapIntensity: 0.26,
+    }),
+    { cacheKey: 'breeze_conifer_v1', anchorY: 0.35, spanY: height, ampX: 0.036, ampZ: 0.026, speed: 1.08 }
+  );
 
   const tiers = 16;
   const fanGeo = new THREE.PlaneGeometry(1, 1);
@@ -389,15 +420,18 @@ function createColumnarCypress(needleTex, barkMat, height = 4.2, maxR = 0.48, se
   trunk.position.y = height * 0.44;
   g.add(trunk);
 
-  const mat = new THREE.MeshStandardMaterial({
-    map: needleTex,
-    color: new THREE.Color('#ffffff'),
-    side: THREE.DoubleSide,
-    alphaTest: 0.36,
-    roughness: 0.78,
-    metalness: 0.0,
-    envMapIntensity: 0.28,
-  });
+  const mat = applyVertexBreeze(
+    new THREE.MeshStandardMaterial({
+      map: needleTex,
+      color: new THREE.Color('#ffffff'),
+      side: THREE.DoubleSide,
+      alphaTest: 0.36,
+      roughness: 0.78,
+      metalness: 0.0,
+      envMapIntensity: 0.28,
+    }),
+    { cacheKey: 'breeze_cypress_v1', anchorY: 0.32, spanY: height, ampX: 0.032, ampZ: 0.024, speed: 1.15 }
+  );
 
   const rings = 22;
   const perRing = 6;
@@ -449,14 +483,17 @@ function createColumnarCypress(needleTex, barkMat, height = 4.2, maxR = 0.48, se
 function createFernClump(fernTex, scale = 1.0, seed = 301) {
   const g = new THREE.Group();
   const rng = createRng(seed);
-  const frondMat = new THREE.MeshStandardMaterial({
-    map: fernTex,
-    color: new THREE.Color('#ffffff'),
-    alphaTest: 0.36,
-    roughness: 0.72,
-    side: THREE.DoubleSide,
-    envMapIntensity: 0.30,
-  });
+  const frondMat = applyVertexBreeze(
+    new THREE.MeshStandardMaterial({
+      map: fernTex,
+      color: new THREE.Color('#ffffff'),
+      alphaTest: 0.36,
+      roughness: 0.72,
+      side: THREE.DoubleSide,
+      envMapIntensity: 0.30,
+    }),
+    { cacheKey: 'breeze_fern_v1', anchorY: 0.25, spanY: 0.56, ampX: 0.028, ampZ: 0.022, speed: 1.55 }
+  );
 
   // Safe arched plane geometry with clamped parameter (zero NaN risk!)
   const frondGeo = new THREE.PlaneGeometry(0.36, 0.85, 2, 6);
@@ -604,13 +641,16 @@ function createBotanicalFlowerShrub(
 
   if (spikes) {
     // Tall crossed botanical raceme spikes (purple lavender / salvia)
-    const bloomMat = new THREE.MeshStandardMaterial({
-      map: spikeTex,
-      color: new THREE.Color(bloomColor),
-      alphaTest: 0.35,
-      side: THREE.DoubleSide,
-      roughness: 0.72,
-    });
+    const bloomMat = applyVertexBreeze(
+      new THREE.MeshStandardMaterial({
+        map: spikeTex,
+        color: new THREE.Color(bloomColor),
+        alphaTest: 0.35,
+        side: THREE.DoubleSide,
+        roughness: 0.72,
+      }),
+      { cacheKey: 'breeze_spike_v1', anchorY: 0.24, spanY: height, ampX: 0.026, ampZ: 0.020, speed: 1.44 }
+    );
     const spikeGeo = new THREE.PlaneGeometry(0.24, height * 0.92);
     const spikeMatrices = [];
     const sCount = 12;
@@ -1179,13 +1219,24 @@ export function createBotanicalGarden({ outlineCurve = null } = {}) {
     side: THREE.DoubleSide,
     roughness: 0.74,
   });
-  const vineMat = new THREE.MeshStandardMaterial({
-    map: ivyTex,
-    color: new THREE.Color('#b6e074'),
-    alphaTest: 0.36,
-    side: THREE.DoubleSide,
-    roughness: 0.72,
-  });
+  const vineMat = applyVertexBreeze(
+    new THREE.MeshStandardMaterial({
+      map: ivyTex,
+      color: new THREE.Color('#b6e074'),
+      alphaTest: 0.36,
+      side: THREE.DoubleSide,
+      roughness: 0.72,
+    }),
+    {
+      cacheKey: 'breeze_ivy_v1',
+      anchorY: 3.72,
+      spanY: 0.48,
+      ampX: 0.030,
+      ampZ: 0.022,
+      speed: 1.48,
+      invertHang: true,
+    }
+  );
 
   const planterLeafGeo = new THREE.PlaneGeometry(0.44, 0.44);
   const planterBloomGeo = new THREE.PlaneGeometry(0.36, 0.36);

@@ -284,10 +284,17 @@ export function createOutdoorPatio() {
   lanternLight.position.set(-0.26, 0.94, 0.22);
   group.add(lanternLight);
 
-  function setCandleWeight(w) {
+  function setCandleWeight(w, timeSec = 0) {
     const cw = THREE.MathUtils.clamp(w, 0, 1);
-    lanternLight.intensity = cw * 3.2;
-    lanternBulbMat.emissiveIntensity = cw * 6.4;
+    const flicker =
+      cw > 0.01 && timeSec > 0
+        ? 1.0 +
+          Math.sin(timeSec * 5.7) * 0.045 +
+          Math.sin(timeSec * 11.3 + 1.2) * 0.032 +
+          Math.cos(timeSec * 3.1) * 0.025
+        : 1.0;
+    lanternLight.intensity = cw * 3.2 * flicker;
+    lanternBulbMat.emissiveIntensity = cw * 6.4 * (0.94 + flicker * 0.06);
   }
 
   // Market Parasol through center of bistro table

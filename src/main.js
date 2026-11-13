@@ -285,6 +285,16 @@ function captureBlendedSnapshot(a, b, t) {
     interiorBoost: THREE.MathUtils.lerp(a.interiorBoost, b.interiorBoost, t),
     snowWeight: THREE.MathUtils.lerp(a.snowWeight, b.snowWeight, t),
     autumnLitterWeight: THREE.MathUtils.lerp(a.autumnLitterWeight, b.autumnLitterWeight, t),
+    windStrength: THREE.MathUtils.lerp(a.windStrength ?? 1.0, b.windStrength ?? 1.0, t),
+    wardrobe: {
+      dress: lerpHex(a.wardrobe.dress, b.wardrobe.dress),
+      belt: lerpHex(a.wardrobe.belt, b.wardrobe.belt),
+      capeColor: lerpHex(a.wardrobe.capeColor, b.wardrobe.capeColor),
+      capeWeight: THREE.MathUtils.lerp(a.wardrobe.capeWeight, b.wardrobe.capeWeight, t),
+      fabricRoughness: THREE.MathUtils.lerp(a.wardrobe.fabricRoughness, b.wardrobe.fabricRoughness, t),
+      racks: a.wardrobe.racks.map((hxA, i) => lerpHex(hxA, b.wardrobe.racks[i] || hxA)),
+      folded: a.wardrobe.folded.map((hxA, i) => lerpHex(hxA, b.wardrobe.folded[i] || hxA)),
+    },
     canopyPalettes: a.canopyPalettes.map((palA, i) => lerpCanopyPalette(palA, b.canopyPalettes[i] || palA, t)),
     coniferTint: a.coniferTint.clone().lerp(b.coniferTint, t),
     cypressTint: a.cypressTint.clone().lerp(b.cypressTint, t),
@@ -402,12 +412,14 @@ function applyAtmosphere(seasonSnap = currentSeasonSnapshot, progress = timeProg
   const bollardBulbDrive = Math.max(1 + (seasonBoost - 1) * 0.75, time.bollardBulbMult);
   island.bollardBulbMat.emissiveIntensity = baseBollardEmissive * bollardBulbDrive;
 
-  patio.setCandleWeight(time.patioCandleWeight);
+  patio.setCandleWeight(time.patioCandleWeight, sharedUniforms.uTime.value);
 
-  // Botanicals & seasonal snow + fireflies
+  // Seasonal couture showcase wardrobe, botanicals & snow/firefly atmosphere
+  building.updateWardrobe(seasonSnap.wardrobe);
   building.bouquetMat.color.copy(seasonSnap.bouquetTint);
   building.indoorLeafMat.color.copy(seasonSnap.planterLeafTint);
   patio.flowerMat.color.copy(seasonSnap.patioFlowerTint);
+  sharedUniforms.uWindStrength.value = seasonSnap.windStrength ?? 1.0;
 
   botanical.updateSeasonTransition(seasonSnap, seasonSnap, 1.0);
   winterSnow.setSnowWeight(seasonSnap.snowWeight);
@@ -801,6 +813,10 @@ function animate(now) {
     applyAtmosphere(currentSeasonSnapshot, timeProgress);
   }
 
+  if (currentTimeState.patioCandleWeight > 0.01) {
+    patio.setCandleWeight(currentTimeState.patioCandleWeight, sharedUniforms.uTime.value);
+  }
+
   seasonalParticles.update(dt, sharedUniforms.uTime.value, camera.quaternion);
 
   if (viewTween) {
@@ -834,6 +850,7 @@ window.__STAGE2__ = {
   getParticlesEnabled: () => particlesEnabled,
   getParticleCount: () => seasonalParticles.getActiveCount(),
   getFireflyCount: () => seasonalParticles.getFireflyCount(),
+  getWardrobeState: () => building.getWardrobeState(),
   getTheme: () => Array.from(document.body.classList).find((c) => c.startsWith('theme-')) || 'theme-day',
   replayAssembly: () => assembly.play(),
   finishAssembly: () => assembly.skip(),
