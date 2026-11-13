@@ -307,6 +307,8 @@ export function createIslandBase() {
     { pos: [5.95, 0.22, -4.15], r: 0.50, rotY: 2.5, seed: 120 },
   ];
 
+  const bouldersGroup = new THREE.Group();
+  bouldersGroup.name = 'PerimeterBoulders';
   boulderSpecs.forEach((b) => {
     const geo = createBoulderGeometry(b.r, b.seed);
     const rock = new THREE.Mesh(geo, boulderMat);
@@ -314,8 +316,9 @@ export function createIslandBase() {
     rock.rotation.y = b.rotY;
     rock.castShadow = true;
     rock.receiveShadow = true;
-    group.add(rock);
+    bouldersGroup.add(rock);
   });
+  group.add(bouldersGroup);
 
   // 4. Instanced 3D Crushed Edge Pebbles (~900 actual mini-stones along border & beds)
   const pebbleGeo = new THREE.IcosahedronGeometry(0.085, 0);
@@ -377,12 +380,14 @@ export function createIslandBase() {
     { x: 0.42, y: 0.33, z: 0.88, w: 2.25, h: 0.10, d: 0.72 },
     { x: 0.42, y: 0.42, z: 0.70, w: 2.15, h: 0.10, d: 0.42 },
   ];
+  const pathAndStepsGroup = new THREE.Group();
+  pathAndStepsGroup.name = 'StepsAndSteppingStones';
   stepSpecs.forEach((st) => {
     const stepMesh = new THREE.Mesh(new THREE.BoxGeometry(st.w, st.h, st.d), sandstoneMat);
     stepMesh.position.set(st.x, st.y, st.z);
     stepMesh.castShadow = true;
     stepMesh.receiveShadow = true;
-    group.add(stepMesh);
+    pathAndStepsGroup.add(stepMesh);
   });
 
   // 7 Winding Stepping Stones tapering from big foreground oval stone up to steps
@@ -397,8 +402,9 @@ export function createIslandBase() {
     const mesh = createSteppingStoneMesh(s.rx, s.rz, 0.075, s.seed, sandstoneMat);
     mesh.position.set(s.x, 0.215, s.z);
     mesh.rotation.y = s.rot;
-    group.add(mesh);
+    pathAndStepsGroup.add(mesh);
   });
+  group.add(pathAndStepsGroup);
 
   // 6. Subtle Dark Slate Patio Terrace Pad beneath outdoor bistro umbrella/table
   const patioGeo = new THREE.CylinderGeometry(1.75, 1.85, 0.08, 32);
@@ -436,12 +442,32 @@ export function createIslandBase() {
     [2.18, 0.22, 1.90],    // Right entrance step guard
     [6.65, 0.22, 2.95],    // Near right boulder/patio edge (tucked naturally)
   ];
+  const bollardsGroup = new THREE.Group();
+  bollardsGroup.name = 'GardenBollards';
+  const bollardLights = [];
   bollardCoords.forEach(([x, y, z]) => {
-    group.add(createGardenBollard(bronzeMat, bollardBulbMat, x, y, z));
+    const b = createGardenBollard(bronzeMat, bollardBulbMat, x, y, z);
+    const pt = b.children.find((ch) => ch.isPointLight);
+    if (pt) bollardLights.push({ light: pt, baseIntensity: pt.intensity });
+    bollardsGroup.add(b);
   });
+  group.add(bollardsGroup);
 
   return {
     group,
     outlineCurve,
+    boulderSpecs,
+    stones,
+    stepSpecs,
+    bollardCoords,
+    bollardBulbMat,
+    bollardLights,
+    assemblyGroups: {
+      baseMound: islandMesh,
+      boulders: bouldersGroup,
+      pathAndSteps: pathAndStepsGroup,
+      bollards: bollardsGroup,
+      patioPad,
+    },
   };
 }

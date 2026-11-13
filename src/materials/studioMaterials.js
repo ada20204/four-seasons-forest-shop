@@ -320,6 +320,47 @@ export function createBoulderTextures() {
 }
 
 /**
+ * Tactile powder-snow granular bump/albedo micro-texture so winter snow cushions
+ * look velvety and sculpted rather than flat white plastic.
+ */
+export function createSnowTextures() {
+  const size = 256;
+  const albedoC = makeCanvas(size, size);
+  const bumpC = makeCanvas(size, size);
+  const actx = albedoC.getContext('2d');
+  const bctx = bumpC.getContext('2d');
+  const rng = makeRng(202612);
+
+  actx.fillStyle = '#f2f5fa';
+  actx.fillRect(0, 0, size, size);
+  bctx.fillStyle = '#808080';
+  bctx.fillRect(0, 0, size, size);
+
+  for (let i = 0; i < 1600; i++) {
+    const x = rng() * size;
+    const y = rng() * size;
+    const r = 0.8 + rng() * 5.2;
+    const bright = rng() > 0.45 ? 255 : 228;
+    const tintB = rng() > 0.5 ? 255 : 244;
+    actx.fillStyle = `rgba(${bright}, ${Math.min(255, bright + 2)}, ${tintB}, 0.20)`;
+    actx.beginPath();
+    actx.arc(x, y, r, 0, Math.PI * 2);
+    actx.fill();
+
+    const bv = 104 + Math.floor(rng() * 88);
+    bctx.fillStyle = `rgba(${bv}, ${bv}, ${bv}, 0.25)`;
+    bctx.beginPath();
+    bctx.arc(x, y, r * 1.15, 0, Math.PI * 2);
+    bctx.fill();
+  }
+
+  return {
+    map: finalizeTexture(albedoC, { srgb: true, repeat: [3, 3] }),
+    bumpMap: finalizeTexture(bumpC, { srgb: false, repeat: [3, 3] }),
+  };
+}
+
+/**
  * High-resolution 512x512 lacy compound broadleaf foliage spray RGBA CanvasTexture.
  * Painted in neutral light greyscale so vertex colors + seasonal tinting shade cleanly.
  */

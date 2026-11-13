@@ -52,7 +52,7 @@ body {
   pointer-events: none;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
 }
 
 .brand-kicker {
@@ -63,12 +63,32 @@ body {
   color: rgba(65, 52, 42, 0.62);
 }
 
+.brand-title-row {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
 .brand-badge h1 {
   margin: 0;
   font-size: 18px;
   font-weight: 500;
   letter-spacing: 0.04em;
   color: rgba(45, 36, 30, 0.88);
+}
+
+.season-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  color: rgba(56, 45, 36, 0.78);
+  background: rgba(255, 251, 245, 0.68);
+  border: 1px solid rgba(110, 88, 66, 0.14);
 }
 
 .hud-panel {
@@ -81,8 +101,8 @@ body {
   flex-direction: column;
   gap: 6px;
   padding: 8px 13px;
-  border-radius: 13px;
-  background: rgba(255, 251, 245, 0.82);
+  border-radius: 14px;
+  background: rgba(255, 251, 245, 0.84);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(110, 88, 66, 0.14);
@@ -97,9 +117,26 @@ body {
   flex-wrap: wrap;
 }
 
-.hud-row--compact {
+.hud-row--primary {
   justify-content: space-between;
-  gap: 12px;
+  gap: 14px;
+}
+
+.hud-section {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.hud-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.hud-row--compact {
+  justify-content: center;
 }
 
 .hud-label {
@@ -120,8 +157,11 @@ body {
 .pill-btn,
 .ghost-btn {
   appearance: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   border: 1px solid rgba(80, 62, 46, 0.14);
-  background: rgba(255, 255, 255, 0.65);
+  background: rgba(255, 255, 255, 0.66);
   color: #3a3028;
   font: inherit;
   font-size: 12px;
@@ -145,34 +185,107 @@ body {
   border-color: #3d332c;
 }
 
+.ghost-btn.is-on {
+  border-color: rgba(61, 51, 44, 0.34);
+  background: rgba(255, 255, 255, 0.88);
+}
+
+.season-btn {
+  padding: 5px 12px;
+}
+
+.season-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--dot, #639b38);
+  flex-shrink: 0;
+}
+
 .hud-hint {
   font-size: 11px;
-  color: rgba(65, 52, 42, 0.58);
+  color: rgba(65, 52, 42, 0.56);
 }
 
 @media (max-width: 720px) {
   .brand-badge {
-    top: 12px;
-    left: 14px;
+    top: 10px;
+    left: 12px;
+    gap: 2px;
+  }
+
+  .brand-kicker {
+    font-size: 9.5px;
+    letter-spacing: 0.18em;
   }
 
   .brand-badge h1 {
     font-size: 15px;
   }
 
-  .hud-panel {
-    bottom: 12px;
-    padding: 8px 10px;
-    gap: 6px;
+  .season-badge {
+    font-size: 9.5px;
+    padding: 1px 6px;
   }
 
-  .hud-hint {
+  .hud-panel {
+    bottom: 10px;
+    width: calc(100vw - 16px);
+    max-width: calc(100vw - 16px);
+    padding: 7px 9px;
+    gap: 6px;
+    border-radius: 12px;
+  }
+
+  .hud-row--primary {
+    gap: 6px;
+    justify-content: space-between;
+  }
+
+  .hud-section {
+    gap: 5px;
+  }
+
+  .hud-label {
+    display: none;
+  }
+
+  .hud-group--seasons {
+    gap: 4px;
+    flex-wrap: nowrap;
+  }
+
+  .hud-actions {
+    gap: 4px;
+    flex-wrap: nowrap;
+  }
+
+  .hud-group--views {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    max-width: 100%;
+    padding-bottom: 1px;
+  }
+
+  .hud-group--views::-webkit-scrollbar {
+    display: none;
+  }
+
+  .hud-row--compact {
     display: none;
   }
 
   .pill-btn,
   .ghost-btn {
     font-size: 11px;
+    padding: 4px 8px;
+    gap: 4px;
+  }
+
+  .season-btn {
     padding: 4px 9px;
   }
 }

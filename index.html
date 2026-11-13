@@ -12,13 +12,44 @@
 
       <header class="brand-badge">
         <span class="brand-kicker">ATELIER IN THE WOODS</span>
-        <h1>四季林间服装店</h1>
+        <div class="brand-title-row">
+          <h1>四季林间服装店</h1>
+          <span id="season-badge" class="season-badge">SUMMER · 盛夏</span>
+        </div>
       </header>
 
-      <aside class="hud-panel" aria-label="视角与景观控制">
-        <div class="hud-row">
+      <aside class="hud-panel" aria-label="四季与视角控制">
+        <div class="hud-row hud-row--primary">
+          <div class="hud-section">
+            <span class="hud-label">季节</span>
+            <div class="hud-group hud-group--seasons" role="group" aria-label="四季切换">
+              <button type="button" class="pill-btn season-btn" data-season="spring">
+                <i class="season-dot" style="--dot: #e87fa5" aria-hidden="true"></i>春
+              </button>
+              <button type="button" class="pill-btn season-btn is-active" data-season="summer">
+                <i class="season-dot" style="--dot: #639b38" aria-hidden="true"></i>夏
+              </button>
+              <button type="button" class="pill-btn season-btn" data-season="autumn">
+                <i class="season-dot" style="--dot: #d88224" aria-hidden="true"></i>秋
+              </button>
+              <button type="button" class="pill-btn season-btn" data-season="winter">
+                <i class="season-dot" style="--dot: #6f92b8" aria-hidden="true"></i>冬
+              </button>
+            </div>
+          </div>
+
+          <div class="hud-actions" role="group" aria-label="氛围与动画控制">
+            <button type="button" id="toggle-particles" class="ghost-btn is-on" aria-pressed="true">
+              飘落: 开
+            </button>
+            <button type="button" id="assembly-action" class="ghost-btn">跳过动画</button>
+            <button type="button" id="reset-view" class="ghost-btn">复位视角</button>
+          </div>
+        </div>
+
+        <div class="hud-row hud-row--views">
           <span class="hud-label">视角</span>
-          <div class="hud-group" role="group" aria-label="相机视角">
+          <div class="hud-group hud-group--views" role="group" aria-label="相机视角">
             <button type="button" class="pill-btn is-active" data-view="overview">默认三分之四</button>
             <button type="button" class="pill-btn" data-view="leftFront">左前方</button>
             <button type="button" class="pill-btn" data-view="rightFront">右前方</button>
@@ -27,9 +58,11 @@
             <button type="button" class="pill-btn" data-view="interior">橱窗近景</button>
           </div>
         </div>
+
         <div class="hud-row hud-row--compact">
-          <span class="hud-hint">左键拖拽旋转 · 滚轮缩放 · 右键平移 · 快捷键 1-6 / R 复位</span>
-          <button type="button" id="reset-view" class="ghost-btn">复位视角</button>
+          <span class="hud-hint">
+            拖拽旋转 · 滚轮缩放 · 右键平移 · 1-6 视角 · Q/W/E/A 四季 · P 飘落 · R 复位
+          </span>
         </div>
       </aside>
     </main>

@@ -271,14 +271,23 @@ export function createOutdoorPatio() {
     { a: 0.78, r: 0.86, faceOffset: -0.08 },  // front-right chair
     { a: -1.45, r: 0.86, faceOffset: 0.0 },   // back-left chair
   ];
+  const chairsGroup = new THREE.Group();
+  const chairSpots = [];
   chairAngles.forEach(({ a, r, faceOffset }) => {
     const ch = createSlattedChair(teakMat);
     ch.position.set(Math.cos(a) * r, 0, Math.sin(a) * r);
     // Face center of table (+PI/2 because chair backrest is at -Z)
     ch.lookAt(0, 0, 0);
     ch.rotation.y += faceOffset;
-    group.add(ch);
+    chairsGroup.add(ch);
+    chairSpots.push({ x: ch.position.x, z: ch.position.z, rotY: ch.rotation.y });
   });
+  group.add(chairsGroup);
 
-  return { group };
+  return {
+    group,
+    flowerMat,
+    worldOrigin: group.position.clone(),
+    chairSpots,
+  };
 }

@@ -657,6 +657,7 @@ export function createBoutiqueBuilding() {
   // ==========================================================
   // 3. SECOND FLOOR STAGGERED WHITE STUCCO VOLUMES (Y: 3.08 .. 6.02)
   // ==========================================================
+  const floor2StartIdx = group.children.length;
 
   // A. Rear-Left Stepped White Block (`X: -3.58 .. -0.68, Z: -3.90 .. -0.32, Y: 3.08 .. 5.48`)
   const left2FShell = new THREE.Mesh(new THREE.BoxGeometry(2.90, 2.40, 3.58), stuccoMat);
@@ -880,9 +881,9 @@ export function createBoutiqueBuilding() {
   interiorLight2F.position.set(1.68, 5.45, -0.55);
   group.add(interiorLight2F);
 
-  const interiorLight2FFill = new THREE.PointLight('#ffbd62', 3.6, 5.2, 1.45);
-  interiorLight2FFill.position.set(0.55, 4.95, 0.05);
-  group.add(interiorLight2FFill);
+  const interiorLight2FL = new THREE.PointLight('#ffbd62', 3.6, 5.2, 1.45);
+  interiorLight2FL.position.set(0.55, 4.95, 0.05);
+  group.add(interiorLight2FL);
 
   for (const lx of [0.35, 1.68, 3.02]) {
     const disc2 = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.055, 0.015, 10), warmLedMat);
@@ -908,7 +909,42 @@ export function createBoutiqueBuilding() {
   plant2FR.position.set(3.40, 3.37, 0.20);
   group.add(plant2FR);
 
+  // Partition building children cleanly into 1F & 2F groups for layered assembly animation
+  const floor1Group = new THREE.Group();
+  floor1Group.name = 'FirstFloorAssembly';
+  const floor2Group = new THREE.Group();
+  floor2Group.name = 'SecondFloorAssembly';
+
+  const allChildren = [...group.children];
+  allChildren.slice(0, floor2StartIdx).forEach((ch) => floor1Group.add(ch));
+  allChildren.slice(floor2StartIdx).forEach((ch) => floor2Group.add(ch));
+  group.add(floor1Group, floor2Group);
+
+  const warmLights = [
+    slatWarmLight,
+    porchWarmLight,
+    interiorLight1FMain,
+    interiorLight1FMannequin,
+    interiorLight2F,
+    interiorLight2FL,
+  ].map((light) => ({ light, baseIntensity: light.intensity }));
+
+  const windowGlowMats = [
+    backDoorGlow.material,
+    backWindowGlow.material,
+    rightSideWinGlow.material,
+    slitGlow.material,
+    rear2FGlow.material,
+  ].map((mat) => ({ mat, baseIntensity: mat.emissiveIntensity }));
+
   return {
     group,
+    floor1Group,
+    floor2Group,
+    warmLights,
+    windowGlowMats,
+    warmLedMat,
+    bouquetMat,
+    indoorLeafMat,
   };
 }

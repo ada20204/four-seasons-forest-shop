@@ -59,8 +59,8 @@ function createBroadleafMaterial(leafTex) {
 }
 
 /**
- * Rewrites ez-tree leaf normals toward a soft sculptural canopy sphere & applies
- * deep inner shadow -> vibrant outer sunlit foliage colors.
+ * Rewrites ez-tree leaf normals toward a soft sculptural canopy sphere & caches per-quad
+ * luminance/jitter factors so seasons crossfade cleanly without rebuilding tree geometry.
  */
 function applyCanopyVolumeColors(geometry, rng, outerHex = '#cdf058', midHex = '#6fb639', deepHex = '#234a1f') {
   geometry.computeBoundingBox();
@@ -74,11 +74,9 @@ function applyCanopyVolumeColors(geometry, rng, outerHex = '#cdf058', midHex = '
   const pos = geometry.attributes.position;
   const norm = geometry.attributes.normal;
   const colors = new Float32Array(pos.count * 3);
+  const quadCount = Math.ceil(pos.count / 4);
+  const colorData = new Float32Array(quadCount * 4);
 
-  const outerBright = new THREE.Color(outerHex);
-  const midTone = new THREE.Color(midHex);
-  const innerDeep = new THREE.Color(deepHex);
-  const c = new THREE.Color();
   const v = new THREE.Vector3();
   const dir = new THREE.Vector3();
 
@@ -101,24 +99,145 @@ function applyCanopyVolumeColors(geometry, rng, outerHex = '#cdf058', midHex = '
     dir.normalize();
 
     const lum = THREE.MathUtils.clamp(distNorm * 0.54 + hNorm * 0.46, 0.0, 1.0);
-    if (lum < 0.45) {
-      c.lerpColors(innerDeep, midTone, lum / 0.45);
-    } else {
-      c.lerpColors(midTone, outerBright, (lum - 0.45) / 0.55);
-    }
-
-    c.offsetHSL((rng() - 0.5) * 0.035, (rng() - 0.5) * 0.06, (rng() - 0.5) * 0.07);
+    const qIdx = (i / 4) * 4;
+    colorData[qIdx] = lum;
+    colorData[qIdx + 1] = (rng() - 0.5) * 0.035;
+    colorData[qIdx + 2] = (rng() - 0.5) * 0.06;
+    colorData[qIdx + 3] = (rng() - 0.5) * 0.07;
 
     for (let k = 0; k < 4 && i + k < pos.count; k++) {
       norm.setXYZ(i + k, dir.x, dir.y, dir.z);
-      colors[(i + k) * 3] = c.r;
-      colors[(i + k) * 3 + 1] = c.g;
-      colors[(i + k) * 3 + 2] = c.b;
     }
   }
 
   norm.needsUpdate = true;
+  geometry.userData.colorData = colorData;
   geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+  const pal = { outer: outerHex, mid: midHex, deep: deepHex };
+  blendCanopyGeometryColors(geometry, pal, pal, 1);
+}
+
+const _oA = new THREE.Color();
+const _mA = new THREE.Color();
+const _dA = new THREE.Color();
+const _oB = new THREE.Color();
+const _mB = new THREE.Color();
+const _dB = new THREE.Color();
+const _cA = new THREE.Color();
+const _cB = new THREE.Color();
+
+function blendCanopyGeometryColors(geometry, palA, palB, blend) {
+  const colorData = geometry.userData.colorData;
+  const colAttr = geometry.attributes.color;
+  if (!colorData || !colAttr) return;
+
+  _oA.set(palA.outer);
+  _mA.set(palA.mid);
+  _dA.set(palA.deep);
+  _oB.set(palB.outer);
+  _mB.set(palB.mid);
+  _dB.set(palB.deep);
+
+  const arr = colAttr.array;
+  const count = colAttr.count;
+  for (let i = 0; i < count; i += 4) {
+    const qIdx = (i / 4) * 4;
+    const lum = colorData[qIdx];
+    const jH = colorData[qIdx + 1];
+    const jS = colorData[qIdx + 2];
+    const jL = colorData[qIdx + 3];
+
+    if (lum < 0.45) {
+      const f = lum / 0.45;
+      _cA.lerpColors(_dA, _mA, f);
+      _cB.lerpColors(_dB, _mB, f);
+    } else {
+      const f = (lum - 0.45) / 0.55;
+      _cA.lerpColors(_mA, _oA, f);
+      _cB.lerpColors(_mB, _oB, f);
+    }
+
+    _cA.lerp(_cB, blend);
+    _cA.offsetHSL(jH, jS, jL);
+
+    for (let k = 0; k < 4 && i + k < count; k++) {
+      const base = (i + k) * 3;
+      arr[base] = _cA.r;
+      arr[base + 1] = _cA.g;
+      arr[base + 2] = _cA.b;
+    }
+  }
+  colAttr.needsUpdate = true;
+}
+
+/**
+ * Extracts sky-exposed world-space foliage clusters from actual ez-tree geometry
+ * so winter snow cushions sit right on real canopy crowns.
+ */
+function extractCanopySnowClusters(trees) {
+  const cellX = 0.64;
+  const cellY = 0.48;
+  const cellZ = 0.64;
+  const columns = new Map();
+  const qCenter = new THREE.Vector3();
+
+  trees.forEach((tree) => {
+    tree.updateMatrixWorld(true);
+    const pos = tree.leavesMesh.geometry.attributes.position;
+    for (let i = 0; i < pos.count; i += 4) {
+      qCenter.set(0, 0, 0);
+      for (let k = 0; k < 4 && i + k < pos.count; k++) {
+        qCenter.x += pos.getX(i + k);
+        qCenter.y += pos.getY(i + k);
+        qCenter.z += pos.getZ(i + k);
+      }
+      qCenter.multiplyScalar(0.25).applyMatrix4(tree.leavesMesh.matrixWorld);
+      if (qCenter.y < 2.25) continue;
+
+      const gx = Math.round(qCenter.x / cellX);
+      const gy = Math.round(qCenter.y / cellY);
+      const gz = Math.round(qCenter.z / cellZ);
+      const colKey = `${gx}:${gz}`;
+      if (!columns.has(colKey)) columns.set(colKey, new Map());
+      const yMap = columns.get(colKey);
+      if (!yMap.has(gy)) {
+        yMap.set(gy, { sx: 0, sy: 0, sz: 0, maxY: -Infinity, count: 0 });
+      }
+      const cell = yMap.get(gy);
+      cell.sx += qCenter.x;
+      cell.sy += qCenter.y;
+      cell.sz += qCenter.z;
+      cell.maxY = Math.max(cell.maxY, qCenter.y);
+      cell.count++;
+    }
+  });
+
+  const clusters = [];
+  for (const yMap of columns.values()) {
+    const ys = [...yMap.keys()].sort((a, b) => b - a);
+    const topGy = ys[0];
+    const topCell = yMap.get(topGy);
+    if (topCell.count >= 3) {
+      clusters.push({
+        x: topCell.sx / topCell.count,
+        y: topCell.maxY * 0.62 + (topCell.sy / topCell.count) * 0.38,
+        z: topCell.sz / topCell.count,
+        radius: THREE.MathUtils.clamp(0.48 + Math.sqrt(topCell.count) * 0.085, 0.56, 1.05),
+      });
+    }
+    if (ys.length > 1) {
+      const subCell = yMap.get(ys[1]);
+      if (subCell.count >= 6 && topGy - ys[1] >= 2) {
+        clusters.push({
+          x: subCell.sx / subCell.count,
+          y: subCell.maxY * 0.62 + (subCell.sy / subCell.count) * 0.38,
+          z: subCell.sz / subCell.count,
+          radius: THREE.MathUtils.clamp(0.42 + Math.sqrt(subCell.count) * 0.065, 0.50, 0.88),
+        });
+      }
+    }
+  }
+  return clusters;
 }
 
 function upgradeBarkMaterial(oldMat) {
@@ -253,6 +372,7 @@ function createConiferSpruceTree(needleTex, barkMat, height = 6.2, baseRadius = 
   inst.instanceMatrix.needsUpdate = true;
   if (inst.instanceColor) inst.instanceColor.needsUpdate = true;
   g.add(inst);
+  g.userData.needleMat = layerMat;
 
   return g;
 }
@@ -317,6 +437,7 @@ function createColumnarCypress(needleTex, barkMat, height = 4.2, maxR = 0.48, se
   inst.instanceMatrix.needsUpdate = true;
   if (inst.instanceColor) inst.instanceColor.needsUpdate = true;
   g.add(inst);
+  g.userData.needleMat = mat;
 
   return g;
 }
@@ -359,6 +480,7 @@ function createFernClump(fernTex, scale = 1.0, seed = 301) {
     f.receiveShadow = true;
     g.add(f);
   }
+  g.userData.frondMat = frondMat;
   return g;
 }
 
@@ -414,6 +536,7 @@ function createVariegatedHosta(scale = 1.0) {
       g.add(m);
     }
   }
+  g.userData.hostaMat = mat;
   return g;
 }
 
@@ -462,7 +585,7 @@ function createBotanicalFlowerShrub(
 
   if (spikes) {
     // Tall crossed botanical raceme spikes (purple lavender / salvia)
-    const spikeMat = new THREE.MeshStandardMaterial({
+    const bloomMat = new THREE.MeshStandardMaterial({
       map: spikeTex,
       color: new THREE.Color(bloomColor),
       alphaTest: 0.35,
@@ -482,7 +605,7 @@ function createBotanicalFlowerShrub(
       const sc = 0.78 + rng() * 0.38;
 
       for (let cross = 0; cross < 2; cross++) {
-        const sp = new THREE.Mesh(spikeGeo, spikeMat);
+        const sp = new THREE.Mesh(spikeGeo, bloomMat);
         sp.position.set(sx, sy, sz);
         sp.rotation.set(tiltX, a + cross * (Math.PI * 0.5), tiltZ);
         sp.scale.setScalar(sc);
@@ -490,6 +613,8 @@ function createBotanicalFlowerShrub(
         g.add(sp);
       }
     }
+    g.userData.leafMat = leafMat;
+    g.userData.bloomMat = bloomMat;
   } else {
     // Frothy crossed hydrangea/daisy floral floret umbels (`绣球花花簇`)
     const bloomMat = new THREE.MeshStandardMaterial({
@@ -517,12 +642,178 @@ function createBotanicalFlowerShrub(
         g.add(card);
       }
     }
+    g.userData.leafMat = leafMat;
+    g.userData.bloomMat = bloomMat;
   }
 
   return g;
 }
 
-export function createBotanicalGarden() {
+function createFallenLeafTexture() {
+  const c = document.createElement('canvas');
+  c.width = 64;
+  c.height = 64;
+  const ctx = c.getContext('2d');
+  ctx.clearRect(0, 0, 64, 64);
+
+  // Lobed autumn maple / crisp leaf silhouette
+  ctx.save();
+  ctx.translate(32, 34);
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.moveTo(0, 22);
+  ctx.lineTo(-2, 10);
+  ctx.quadraticCurveTo(-18, 12, -22, 2);
+  ctx.quadraticCurveTo(-15, -2, -23, -12);
+  ctx.quadraticCurveTo(-10, -11, -7, -25);
+  ctx.lineTo(0, -17);
+  ctx.lineTo(7, -25);
+  ctx.quadraticCurveTo(10, -11, 23, -12);
+  ctx.quadraticCurveTo(15, -2, 22, 2);
+  ctx.quadraticCurveTo(18, 12, 2, 10);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.strokeStyle = 'rgba(0,0,0,0.22)';
+  ctx.lineWidth = 1.6;
+  ctx.beginPath();
+  ctx.moveTo(0, 20);
+  ctx.lineTo(0, -15);
+  ctx.moveTo(0, 2);
+  ctx.lineTo(-14, -7);
+  ctx.moveTo(0, 2);
+  ctx.lineTo(14, -7);
+  ctx.stroke();
+  ctx.restore();
+
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
+
+function pointInXZPoly(x, z, poly) {
+  let inside = false;
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+    const xi = poly[i].x;
+    const zi = poly[i].z;
+    const xj = poly[j].x;
+    const zj = poly[j].z;
+    if ((zi > z) !== (zj > z) && x < ((xj - xi) * (z - zi)) / (zj - zi + 1e-6) + xi) {
+      inside = !inside;
+    }
+  }
+  return inside;
+}
+
+function createAutumnLeafLitter(outlineCurve, rng) {
+  const leafCount = 300;
+  const fallenTex = createFallenLeafTexture();
+  const geo = new THREE.PlaneGeometry(0.32, 0.32);
+  geo.rotateX(-Math.PI / 2);
+
+  const mat = new THREE.MeshStandardMaterial({
+    map: fallenTex,
+    color: new THREE.Color('#ffffff'),
+    alphaTest: 0.38,
+    side: THREE.DoubleSide,
+    roughness: 0.78,
+    metalness: 0.0,
+    envMapIntensity: 0.24,
+  });
+
+  const inst = new THREE.InstancedMesh(geo, mat, leafCount);
+  inst.receiveShadow = true;
+  inst.castShadow = false;
+  inst.visible = false;
+
+  const poly = outlineCurve
+    ? outlineCurve.getSpacedPoints(96).map((p) => ({ x: p.x * 0.90, z: p.z * 0.90 }))
+    : null;
+
+  const focusSpots = [
+    { x: -5.4, z: -0.2, r: 2.5 },
+    { x: -3.2, z: 3.1, r: 2.2 },
+    { x: -0.5, z: 4.1, r: 2.0 },
+    { x: 2.6, z: 3.9, r: 2.2 },
+    { x: 5.5, z: -0.8, r: 2.2 },
+    { x: 5.9, z: 2.4, r: 2.0 },
+    { x: 1.5, z: -4.8, r: 2.0 },
+    { x: -5.9, z: 1.8, r: 1.9 },
+  ];
+
+  const palette = ['#f0be2d', '#dc6c18', '#e8961e', '#b84214', '#f6d452', '#cf5616'];
+  const c = new THREE.Color();
+  const dummy = new THREE.Object3D();
+  const baseTransforms = [];
+
+  for (let i = 0; i < leafCount; i++) {
+    let x = 0;
+    let z = 0;
+    for (let attempt = 0; attempt < 24; attempt++) {
+      const spot = focusSpots[(i + attempt) % focusSpots.length];
+      const ang = rng() * Math.PI * 2;
+      const dist = Math.sqrt(rng()) * spot.r;
+      const tx = spot.x + Math.cos(ang) * dist;
+      const tz = spot.z + Math.sin(ang) * dist;
+
+      // Stay clear of boutique interior & entrance steps
+      if (tx > -4.05 && tx < 3.85 && tz > -3.75 && tz < 0.70) continue;
+      if (tx > -1.35 && tx < 1.35 && tz > 0.55 && tz < 2.25) continue;
+      if (poly && !pointInXZPoly(tx, tz, poly)) continue;
+      x = tx;
+      z = tz;
+      break;
+    }
+
+    const y = 0.228 + rng() * 0.032;
+    const rx = (rng() - 0.5) * 0.28;
+    const ry = rng() * Math.PI * 2;
+    const rz = (rng() - 0.5) * 0.28;
+    const s = 0.72 + rng() * 0.66;
+
+    baseTransforms.push({ x, y, z, rx, ry, rz, s });
+    dummy.position.set(x, y, z);
+    dummy.rotation.set(rx, ry, rz);
+    dummy.scale.setScalar(0.0001);
+    dummy.updateMatrix();
+    inst.setMatrixAt(i, dummy.matrix);
+
+    c.set(palette[Math.floor(rng() * palette.length)]).offsetHSL(
+      (rng() - 0.5) * 0.03,
+      (rng() - 0.5) * 0.08,
+      (rng() - 0.5) * 0.08
+    );
+    inst.setColorAt(i, c);
+  }
+
+  inst.instanceMatrix.needsUpdate = true;
+  if (inst.instanceColor) inst.instanceColor.needsUpdate = true;
+
+  let lastWeight = -1;
+  function setWeight(w) {
+    if (Math.abs(w - lastWeight) < 0.004) return;
+    lastWeight = w;
+    if (w <= 0.01) {
+      inst.visible = false;
+      return;
+    }
+    inst.visible = true;
+    const ease = THREE.MathUtils.smoothstep(w, 0.0, 1.0);
+    for (let i = 0; i < leafCount; i++) {
+      const t = baseTransforms[i];
+      dummy.position.set(t.x, t.y, t.z);
+      dummy.rotation.set(t.rx, t.ry, t.rz);
+      dummy.scale.setScalar(Math.max(0.001, t.s * ease));
+      dummy.updateMatrix();
+      inst.setMatrixAt(i, dummy.matrix);
+    }
+    inst.instanceMatrix.needsUpdate = true;
+  }
+
+  return { inst, setWeight };
+}
+
+export function createBotanicalGarden({ outlineCurve = null } = {}) {
   const group = new THREE.Group();
   group.name = 'FourSeasonsBotanicalGarden';
 
@@ -632,6 +923,9 @@ export function createBotanicalGarden() {
     },
   ];
 
+  const trees = [];
+  const treeRootShadows = [];
+
   treeSpecs.forEach((s) => {
     const tree = new Tree();
     tree.options.seed = s.seed;
@@ -711,6 +1005,7 @@ export function createBotanicalGarden() {
     lPos.needsUpdate = true;
 
     group.add(tree);
+    trees.push(tree);
 
     const rootShadow = new THREE.Mesh(
       new THREE.PlaneGeometry(2.1, 2.1),
@@ -719,7 +1014,11 @@ export function createBotanicalGarden() {
     rootShadow.rotation.x = -Math.PI / 2;
     rootShadow.position.set(s.pos[0], s.pos[1] + 0.015, s.pos[2]);
     group.add(rootShadow);
+    treeRootShadows.push(rootShadow);
   });
+
+  // Extract sky-exposed canopy clusters BEFORE AssemblyController moves trees for intro!
+  const canopySnowClusters = extractCanopySnowClusters(trees);
 
   // ==========================================================
   // 2. REAR CONIFERS (3 Evergreen Spruces behind 2F roofline, clear of rear door!)
@@ -729,10 +1028,12 @@ export function createBotanicalGarden() {
     { x: 0.85, z: -5.75, h: 8.15, r: 1.48, seed: 502 },
     { x: 2.05, z: -5.45, h: 7.15, r: 1.30, seed: 503 },
   ];
+  const conifers = [];
   coniferSpecs.forEach((c) => {
     const spruce = createConiferSpruceTree(coniferTex, barkGenericMat, c.h, c.r, c.seed);
     spruce.position.set(c.x, 0.24, c.z);
     group.add(spruce);
+    conifers.push(spruce);
   });
 
   // ==========================================================
@@ -743,10 +1044,12 @@ export function createBotanicalGarden() {
     { x: -4.65, z: 2.35, h: 2.85, r: 0.36, seed: 602 },
     { x: 7.05, z: 1.45, h: 4.15, r: 0.44, seed: 603 },
   ];
+  const cypresses = [];
   cypressSpecs.forEach((cp) => {
     const cy = createColumnarCypress(coniferTex, barkGenericMat, cp.h, cp.r, cp.seed);
     cy.position.set(cp.x, 0.22, cp.z);
     group.add(cy);
+    cypresses.push(cy);
   });
 
   // ==========================================================
@@ -761,43 +1064,49 @@ export function createBotanicalGarden() {
     [6.15, 0.24, 0.85, 0.95, 705],
     [6.65, 0.24, 1.55, 0.88, 706],
   ];
+  const ferns = [];
   fernCoords.forEach(([x, y, z, s, seed]) => {
     const f = createFernClump(fernTex, s, seed);
     f.position.set(x, y, z);
     group.add(f);
+    ferns.push(f);
   });
 
   // Signature Front-Left & Courtyard Variegated Hosta Rosettes
-  const hostaLeft = createVariegatedHosta(1.22);
-  hostaLeft.position.set(-4.02, 0.22, 4.15);
-  group.add(hostaLeft);
-
-  const hostaRight = createVariegatedHosta(0.95);
-  hostaRight.position.set(5.65, 0.22, 3.85);
-  group.add(hostaRight);
+  const hostaItems = [
+    { pos: [-4.02, 0.22, 4.15], scale: 1.22 },
+    { pos: [5.65, 0.22, 3.85], scale: 0.95 },
+  ];
+  const hostas = hostaItems.map((hi) => {
+    const h = createVariegatedHosta(hi.scale);
+    h.position.set(hi.pos[0], hi.pos[1], hi.pos[2]);
+    group.add(h);
+    return h;
+  });
 
   const shrubSpecs = [
-    { x: -4.95, z: 2.95, w: 1.12, h: 0.84, bloom: '#fcf7ec', spikes: false, seed: 801 },
-    { x: -3.55, z: 2.55, w: 0.92, h: 0.72, bloom: '#9872dc', spikes: true, seed: 816 },
-    { x: -3.15, z: 3.45, w: 1.02, h: 0.96, bloom: '#825ad6', spikes: true, seed: 802 },
-    { x: -2.35, z: 3.85, w: 0.88, h: 0.65, bloom: '#eda2be', spikes: false, seed: 803 },
-    { x: -6.15, z: 2.95, w: 0.80, h: 0.54, bloom: '#d8de58', spikes: false, seed: 804 },
-    { x: -2.08, z: 1.45, w: 0.86, h: 0.68, bloom: '#f7f1e3', spikes: false, seed: 805 },
+    { x: -4.95, z: 2.95, w: 1.12, h: 0.84, bloom: '#fcf7ec', spikes: false, role: 'hydrangea', seed: 801 },
+    { x: -3.55, z: 2.55, w: 0.92, h: 0.72, bloom: '#9872dc', spikes: true, role: 'spike', seed: 816 },
+    { x: -3.15, z: 3.45, w: 1.02, h: 0.96, bloom: '#825ad6', spikes: true, role: 'spike', seed: 802 },
+    { x: -2.35, z: 3.85, w: 0.88, h: 0.65, bloom: '#eda2be', spikes: false, role: 'pinkMound', seed: 803 },
+    { x: -6.15, z: 2.95, w: 0.80, h: 0.54, bloom: '#d8de58', spikes: false, role: 'yellow', seed: 804 },
+    { x: -2.08, z: 1.45, w: 0.86, h: 0.68, bloom: '#f7f1e3', spikes: false, role: 'hydrangeaAlt', seed: 805 },
 
-    { x: 2.95, z: 2.05, w: 1.04, h: 0.82, bloom: '#faf6ec', spikes: false, seed: 806 },
-    { x: 3.35, z: 4.10, w: 1.16, h: 0.98, bloom: '#845cd8', spikes: true, seed: 807 },
-    { x: 4.12, z: 4.55, w: 0.90, h: 0.62, bloom: '#e898ba', spikes: false, seed: 808 },
-    { x: 2.25, z: 4.65, w: 0.86, h: 0.56, bloom: '#fcf8ee', spikes: false, seed: 809 },
-    { x: 6.85, z: 2.25, w: 0.98, h: 0.84, bloom: '#865fda', spikes: true, seed: 810 },
-    { x: 7.25, z: 1.95, w: 0.82, h: 0.58, bloom: '#fcf8ee', spikes: false, seed: 817 },
+    { x: 2.95, z: 2.05, w: 1.04, h: 0.82, bloom: '#faf6ec', spikes: false, role: 'hydrangea', seed: 806 },
+    { x: 3.35, z: 4.10, w: 1.16, h: 0.98, bloom: '#845cd8', spikes: true, role: 'spike', seed: 807 },
+    { x: 4.12, z: 4.55, w: 0.90, h: 0.62, bloom: '#e898ba', spikes: false, role: 'pinkMound', seed: 808 },
+    { x: 2.25, z: 4.65, w: 0.86, h: 0.56, bloom: '#fcf8ee', spikes: false, role: 'hydrangeaAlt', seed: 809 },
+    { x: 6.85, z: 2.25, w: 0.98, h: 0.84, bloom: '#865fda', spikes: true, role: 'spike', seed: 810 },
+    { x: 7.25, z: 1.95, w: 0.82, h: 0.58, bloom: '#fcf8ee', spikes: false, role: 'hydrangea', seed: 817 },
 
-    { x: 5.05, z: -1.45, w: 0.95, h: 0.74, bloom: '#f8f4ea', spikes: false, seed: 812 },
-    { x: 5.15, z: -2.65, w: 0.92, h: 0.72, bloom: '#f8f4ea', spikes: false, seed: 813 },
+    { x: 5.05, z: -1.45, w: 0.95, h: 0.74, bloom: '#f8f4ea', spikes: false, role: 'hydrangeaAlt', seed: 812 },
+    { x: 5.15, z: -2.65, w: 0.92, h: 0.72, bloom: '#f8f4ea', spikes: false, role: 'hydrangea', seed: 813 },
 
-    { x: -2.55, z: -4.95, w: 1.10, h: 0.78, bloom: '#f8f4ea', spikes: false, seed: 814 },
-    { x: 1.95, z: -4.65, w: 1.00, h: 0.78, bloom: '#8b65dc', spikes: true, seed: 815 },
+    { x: -2.55, z: -4.95, w: 1.10, h: 0.78, bloom: '#f8f4ea', spikes: false, role: 'hydrangea', seed: 814 },
+    { x: 1.95, z: -4.65, w: 1.00, h: 0.78, bloom: '#8b65dc', spikes: true, role: 'spike', seed: 815 },
   ];
 
+  const shrubs = [];
   shrubSpecs.forEach((s) => {
     const mound = createBotanicalFlowerShrub(leafTex, hydrangeaTex, spikeTex, {
       width: s.w,
@@ -808,12 +1117,18 @@ export function createBotanicalGarden() {
       seed: s.seed,
     });
     mound.position.set(s.x, 0.21, s.z);
+    mound.userData.role = s.role;
     group.add(mound);
+    shrubs.push(mound);
   });
 
   // ==========================================================
   // 5. 2F PLANTER BOX FROTHY BLOOMS & ORGANIC TRAILING IVY SWAGS
   // ==========================================================
+  const planterFloraGroup = new THREE.Group();
+  planterFloraGroup.name = 'PlanterFlora2F';
+  group.add(planterFloraGroup);
+
   const planterLeafMat = new THREE.MeshStandardMaterial({
     map: leafTex,
     color: new THREE.Color('#6ca83b'),
@@ -821,9 +1136,16 @@ export function createBotanicalGarden() {
     side: THREE.DoubleSide,
     roughness: 0.75,
   });
-  const planterBloomMat = new THREE.MeshStandardMaterial({
+  const planterBloomPrimaryMat = new THREE.MeshStandardMaterial({
     map: hydrangeaTex,
     color: new THREE.Color('#fcf9ef'),
+    alphaTest: 0.36,
+    side: THREE.DoubleSide,
+    roughness: 0.74,
+  });
+  const planterBloomSecondaryMat = new THREE.MeshStandardMaterial({
+    map: hydrangeaTex,
+    color: new THREE.Color('#faf6e8'),
     alphaTest: 0.36,
     side: THREE.DoubleSide,
     roughness: 0.74,
@@ -847,18 +1169,19 @@ export function createBotanicalGarden() {
       const lm = new THREE.Mesh(planterLeafGeo, planterLeafMat);
       lm.position.set(x, 3.88 + rng() * 0.06, 1.24 + (rng() - 0.5) * 0.06);
       lm.rotation.set(-0.35 + rng() * 0.65, c * Math.PI * 0.5 + rng() * 0.45, (rng() - 0.5) * 0.35);
-      group.add(lm);
+      planterFloraGroup.add(lm);
     }
 
     for (let b = 0; b < 2; b++) {
-      const bm = new THREE.Mesh(planterBloomGeo, planterBloomMat);
+      const mat = (i + b) % 2 === 0 ? planterBloomPrimaryMat : planterBloomSecondaryMat;
+      const bm = new THREE.Mesh(planterBloomGeo, mat);
       bm.position.set(x + (rng() - 0.5) * 0.06, 3.94 + rng() * 0.09, 1.32 + rng() * 0.05);
       bm.rotation.set(0.18 + rng() * 0.48, b * 1.25 + rng() * 0.45, (rng() - 0.5) * 0.42);
-      group.add(bm);
+      planterFloraGroup.add(bm);
     }
   }
 
-  // Natural grouped trailing ivy cascades (`基准图.png` clustered spilling swags, no picket fence look)
+  // Natural grouped trailing ivy cascades (`基准图.png` clustered spilling swags)
   const swagCenters = [-0.04, 0.56, 1.26, 2.02, 2.76, 3.36];
   swagCenters.forEach((cx, sIdx) => {
     const tendrils = sIdx === 0 || sIdx === 5 ? 4 : 3;
@@ -871,15 +1194,94 @@ export function createBotanicalGarden() {
       vm.position.set(cx + offset, 3.70 - dropScaleY * 0.16, 1.445 + rng() * 0.03);
       vm.rotation.set(0.18 + rng() * 0.14, (rng() - 0.5) * 0.55, leanZ);
       vm.scale.set(0.95 + rng() * 0.35, dropScaleY, 1.0);
-      group.add(vm);
+      planterFloraGroup.add(vm);
 
       const vmCross = new THREE.Mesh(vineGeo, vineMat);
       vmCross.position.copy(vm.position);
       vmCross.rotation.set(0.20, 0.95 + rng() * 0.4, leanZ * 0.85);
       vmCross.scale.copy(vm.scale);
-      group.add(vmCross);
+      planterFloraGroup.add(vmCross);
     }
   });
 
-  return { group };
+  // ==========================================================
+  // 6. AUTUMN CRISP FALLEN LEAF LITTER (`autumnLitterWeight`)
+  // ==========================================================
+  const leafLitter = createAutumnLeafLitter(outlineCurve, rng);
+  group.add(leafLitter.inst);
+
+  // Smooth seasonal interpolation state
+  const cLeafA = new THREE.Color();
+  const cLeafB = new THREE.Color();
+  const cBloomA = new THREE.Color();
+  const cBloomB = new THREE.Color();
+  let lastCanopyKey = '';
+
+  function updateSeasonTransition(presetA, presetB, blend) {
+    const t = THREE.MathUtils.clamp(blend, 0, 1);
+    const canopyKey = `${presetA.key}:${presetB.key}:${t.toFixed(3)}`;
+    if (canopyKey !== lastCanopyKey) {
+      lastCanopyKey = canopyKey;
+      trees.forEach((tree, idx) => {
+        const palA = presetA.canopyPalettes[idx] || presetA.canopyPalettes[0];
+        const palB = presetB.canopyPalettes[idx] || presetB.canopyPalettes[0];
+        blendCanopyGeometryColors(tree.leavesMesh.geometry, palA, palB, t);
+      });
+    }
+
+    conifers.forEach((sp) => {
+      if (sp.userData.needleMat) sp.userData.needleMat.color.lerpColors(presetA.coniferTint, presetB.coniferTint, t);
+    });
+    cypresses.forEach((cp) => {
+      if (cp.userData.needleMat) cp.userData.needleMat.color.lerpColors(presetA.cypressTint, presetB.cypressTint, t);
+    });
+    ferns.forEach((f) => {
+      if (f.userData.frondMat) f.userData.frondMat.color.lerpColors(presetA.fernTint, presetB.fernTint, t);
+    });
+    hostas.forEach((h) => {
+      if (h.userData.hostaMat) h.userData.hostaMat.color.lerpColors(presetA.hostaTint, presetB.hostaTint, t);
+    });
+
+    planterLeafMat.color.lerpColors(presetA.planterLeafTint, presetB.planterLeafTint, t);
+    planterBloomPrimaryMat.color.lerpColors(presetA.planterBloomPrimary, presetB.planterBloomPrimary, t);
+    planterBloomSecondaryMat.color.lerpColors(presetA.planterBloomSecondary, presetB.planterBloomSecondary, t);
+    vineMat.color.lerpColors(presetA.vineTint, presetB.vineTint, t);
+
+    cLeafA.set(presetA.shrubPalette.leaf);
+    cLeafB.set(presetB.shrubPalette.leaf);
+    shrubs.forEach((mound) => {
+      if (mound.userData.leafMat) mound.userData.leafMat.color.lerpColors(cLeafA, cLeafB, t);
+      const role = mound.userData.role || 'hydrangea';
+      if (mound.userData.bloomMat) {
+        cBloomA.set(presetA.shrubPalette[role] || presetA.shrubPalette.hydrangea);
+        cBloomB.set(presetB.shrubPalette[role] || presetB.shrubPalette.hydrangea);
+        mound.userData.bloomMat.color.lerpColors(cBloomA, cBloomB, t);
+      }
+    });
+
+    const litterWeight = THREE.MathUtils.lerp(presetA.autumnLitterWeight, presetB.autumnLitterWeight, t);
+    leafLitter.setWeight(litterWeight);
+  }
+
+  return {
+    group,
+    canopySnowClusters,
+    coniferSpecs,
+    cypressSpecs,
+    fernCoords,
+    hostaItems,
+    shrubSpecs,
+    assemblyPieces: {
+      planterFloraGroup,
+      trees,
+      treeRootShadows,
+      conifers,
+      cypresses,
+      ferns,
+      hostas,
+      shrubs,
+      leafLitterMesh: leafLitter.inst,
+    },
+    updateSeasonTransition,
+  };
 }

@@ -1,6 +1,7 @@
 node_modules/
 dist/
 .verify-stage1/
+.verify-stage2/
 .verify-screenshots/
 *.log
 .DS_Store
