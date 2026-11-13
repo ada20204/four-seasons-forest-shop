@@ -95,15 +95,15 @@ node scripts/verify-stage2.mjs
 
 ### 已验证运行环境（`npm run build` + `node scripts/verify-stage2.mjs`）
 
-- **构建产物（Vite `6.4.6`）**：`dist/index.html` (`3.51 kB`)、`dist/assets/index-*.css` (`12.71 kB`)、`dist/assets/index-*.js` (`4,948.05 kB`，gzip `3,313.39 kB`) 及全部本地 `.woff`/`.woff2` 字体资源。
+- **构建产物（Vite `6.4.6`）**：`dist/index.html` (`3.51 kB`)、`dist/assets/index-*.css` (`12.71 kB`)、`dist/assets/index-*.js` (`4,948.45 kB`，gzip `3,313.48 kB`) 及全部本地 `.woff`/`.woff2` 字体资源。
 - **桌面端渲染与交互（Linux 无头 Firefox `1440×960` WebGL）**：
   - 控制台/页面报错数：`0`（`errors: []`）
   - 组装入场中段态检测：`midAssemblyActive: true`
-  - 轨道拖拽角度偏移：`dragDelta: 27.66`；滚轮缩放位移：`zoomDelta: 5.508`
+  - 轨道拖拽角度偏移：`dragDelta: 26.1`；滚轮缩放位移：`zoomDelta: 6.398`
   - 四季粒子统计：`summer: 58`、`spring: 130`、`autumn: 125`、`winter: 165`（关闭清零为 `0`，恢复为 `165`）
 - **移动端窄屏视口模拟（无头 Firefox `390×844` 竖屏，`winter`）**：
   - HUD 高度：`77px`（占可视高度 `10.2%`），横向溢出 `hudOverflowX: false`
-  - 帧绘制统计：`calls: 902`，`triangles: 674,770`
+  - 帧绘制统计：`calls: 902`，`triangles: 678,018`
 
 ### 未测试环境说明
 
@@ -117,4 +117,4 @@ node scripts/verify-stage2.mjs
 
 1. **冬雪树冠覆盖策略**：AI 概念图中树木冠层近乎被高饱和绒毛感大雪团整体密封覆盖；实时 WebGL 版在主枝干冠层生成平滑过渡的多叶云朵雪枕，保留适量底层冷绿冬叶穿插，兼顾了任意角度旋转的通透层次感与实时 `N8AO` / 帧率开销。
 2. **橱窗暖光浓度与背景明暗对比**：AI 图采用局部 2700K 高饱和琥珀色室内补光；实时版统一遵循 `ToneMappingMode.AGX` 物理色调映射与高阈值泛光，室内呈现出干净柔和的米暖质感，避免纯白雪面或墙体出现高光过曝。
-3. **植物叶片写意度与步石露面处理**：乔木与地被植物采用 `ez-tree` 与合批 Alpha 叶片卡片构建，微观叶缘锯齿较 AI 手绘插画略简化；冬季庭院保留了砂岩步石顶面的可读步行石面，将厚度积雪堆叠在步石四周、入口台阶两侧、景石顶部与连续雪地上。
+3. **植物叶片写意度与步石露面处理**：乔木与地被植物采用 `ez-tree` 与合批 Alpha 叶片卡片构建，微观叶缘锯齿较 AI 手绘插画略简化；冬季庭院保留了砂岩步石中部的可读步行石面，将厚度积雪堆叠在步石四周、步石交错肩缘、入口台阶两侧、景石顶部与连续雪地上。

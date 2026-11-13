@@ -160,6 +160,7 @@ scene.add(seasonalParticles.mesh);
 
 const baseLedEmissive = building.warmLedMat.emissiveIntensity;
 const baseBollardEmissive = island.bollardBulbMat.emissiveIntensity;
+const baseInteriorWallEmissive = building.interiorWallMat.emissiveIntensity;
 
 // 6. Layered Assembly Animation (`AssemblyController`)
 const assembly = new AssemblyController();
@@ -313,10 +314,11 @@ function applySeasonVisuals(presetA, presetB, t) {
     mat.emissiveIntensity = baseIntensity * (1 + (boost - 1) * 0.85);
   });
   building.warmLedMat.emissiveIntensity = baseLedEmissive * (1 + (boost - 1) * 0.45);
+  building.interiorWallMat.emissiveIntensity = baseInteriorWallEmissive + Math.max(0, boost - 1) * 0.44;
   island.bollardLights.forEach(({ light, baseIntensity }) => {
     light.intensity = baseIntensity * boost;
   });
-  island.bollardBulbMat.emissiveIntensity = baseBollardEmissive * (1 + (boost - 1) * 0.45);
+  island.bollardBulbMat.emissiveIntensity = baseBollardEmissive * (1 + (boost - 1) * 0.75);
 
   building.bouquetMat.color.lerpColors(presetA.bouquetTint, presetB.bouquetTint, blend);
   building.indoorLeafMat.color.lerpColors(presetA.planterLeafTint, presetB.planterLeafTint, blend);

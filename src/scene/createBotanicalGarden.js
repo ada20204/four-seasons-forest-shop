@@ -246,10 +246,10 @@ function upgradeBarkMaterial(oldMat) {
     map: oldMat.map || null,
     normalMap: oldMat.normalMap || null,
     aoMap: oldMat.aoMap || null,
-    color: new THREE.Color('#745840'),
-    roughness: 0.90,
+    color: new THREE.Color('#c2a488'),
+    roughness: 0.88,
     metalness: 0.02,
-    envMapIntensity: 0.25,
+    envMapIntensity: 0.34,
   });
 }
 
@@ -1221,14 +1221,14 @@ export function createBotanicalGarden({ outlineCurve = null } = {}) {
     }
   }
 
-  // Natural grouped trailing ivy cascades (`基准图.png` clustered spilling swags)
-  const swagCenters = [-0.04, 0.56, 1.26, 2.02, 2.76, 3.36];
+  // Natural grouped trailing ivy cascades across full 2F planter (`基准图.png` spilling swags)
+  const swagCenters = [-0.10, 0.30, 0.72, 1.16, 1.62, 2.08, 2.52, 2.96, 3.38];
   swagCenters.forEach((cx, sIdx) => {
-    const tendrils = sIdx === 0 || sIdx === 5 ? 4 : 3;
+    const tendrils = sIdx === 0 || sIdx === swagCenters.length - 1 || sIdx % 2 === 0 ? 4 : 3;
     for (let k = 0; k < tendrils; k++) {
-      const offset = (k - (tendrils - 1) * 0.5) * 0.14 + (rng() - 0.5) * 0.05;
-      const dropScaleY = (0.58 + rng() * 0.72) * (k === Math.floor(tendrils / 2) ? 1.22 : 0.82);
-      const leanZ = (k - (tendrils - 1) * 0.5) * 0.24 + (rng() - 0.5) * 0.14;
+      const offset = (k - (tendrils - 1) * 0.5) * 0.13 + (rng() - 0.5) * 0.05;
+      const dropScaleY = (0.52 + rng() * 0.74) * (k === Math.floor(tendrils / 2) ? 1.24 : 0.82);
+      const leanZ = (k - (tendrils - 1) * 0.5) * 0.22 + (rng() - 0.5) * 0.14;
 
       planterDummy.position.set(cx + offset, 3.70 - dropScaleY * 0.16, 1.445 + rng() * 0.03);
       planterDummy.rotation.set(0.18 + rng() * 0.14, (rng() - 0.5) * 0.55, leanZ);

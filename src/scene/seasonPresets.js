@@ -31,18 +31,18 @@ export const SEASON_PRESETS = {
     autumnLitterWeight: 0.0,
     // Botanical palettes
     canopyPalettes: [
-      { outer: '#ffe3ed', mid: '#ff9dc1', deep: '#c85884' }, // Left Hero Sakura
-      { outer: '#ffe7f0', mid: '#ffa4c6', deep: '#cc5f8a' }, // Rear-Right Sakura
-      { outer: '#ffffff', mid: '#fff0f5', deep: '#d8b0be' }, // Courtyard Magnolia/Pear White-Blush
-      { outer: '#ffdeeb', mid: '#ff94bc', deep: '#c45480' }, // Rear-Center Sakura
-      { outer: '#ffeaf2', mid: '#ffabc9', deep: '#cf668e' }, // Far-Left Sapling Sakura
+      { outer: '#fff0f6', mid: '#ffb6d3', deep: '#d66692' }, // Left Hero Sakura
+      { outer: '#fff2f7', mid: '#ffbcd7', deep: '#da6d97' }, // Rear-Right Sakura
+      { outer: '#ffffff', mid: '#fff5f8', deep: '#e4c2ce' }, // Courtyard Magnolia/Pear White-Blush
+      { outer: '#ffecf4', mid: '#ffaed0', deep: '#d2628e' }, // Rear-Center Sakura
+      { outer: '#fff2f7', mid: '#ffc0d9', deep: '#dc729b' }, // Far-Left Sapling Sakura
     ],
-    coniferTint: new THREE.Color('#a6d47e'),
+    coniferTint: new THREE.Color('#9cd06c'),
     cypressTint: new THREE.Color('#ffffff'),
     fernTint: new THREE.Color('#b6e068'),
     hostaTint: new THREE.Color('#f6ffe6'),
-    planterLeafTint: new THREE.Color('#80bd49'),
-    planterBloomPrimary: new THREE.Color('#ff96be'),
+    planterLeafTint: new THREE.Color('#78ba44'),
+    planterBloomPrimary: new THREE.Color('#ff84b4'),
     planterBloomSecondary: new THREE.Color('#fff6f8'),
     vineTint: new THREE.Color('#bce87e'),
     bouquetTint: new THREE.Color('#ffa2c6'),
@@ -129,11 +129,11 @@ export const SEASON_PRESETS = {
     snowWeight: 0.0,
     autumnLitterWeight: 1.0,
     canopyPalettes: [
-      { outer: '#ffec3a', mid: '#f58f0e', deep: '#982e0a' }, // Left Hero Golden Maple
-      { outer: '#ffd234', mid: '#e8760e', deep: '#8c2808' }, // Rear-Right Warm Amber
-      { outer: '#fff058', mid: '#faa618', deep: '#a43e0c' }, // Courtyard Honey Birch
-      { outer: '#ffd93a', mid: '#ee8010', deep: '#902c0a' }, // Rear Accent
-      { outer: '#ffe344', mid: '#f28b12', deep: '#94300a' }, // Far-Left Sapling
+      { outer: '#fff44c', mid: '#ffa814', deep: '#ba420a' }, // Left Hero Golden Maple
+      { outer: '#ffe442', mid: '#f88d10', deep: '#ac380a' }, // Rear-Right Warm Amber
+      { outer: '#fff868', mid: '#ffbb1c', deep: '#c4500c' }, // Courtyard Honey Birch
+      { outer: '#ffea48', mid: '#fa9812', deep: '#b43e0a' }, // Rear Accent
+      { outer: '#fff054', mid: '#fca214', deep: '#b8420c' }, // Far-Left Sapling
     ],
     coniferTint: new THREE.Color('#eef2d4'), // Rear spruces stay rich evergreen!
     cypressTint: new THREE.Color('#f4f2da'), // Cypresses stay evergreen!
@@ -160,21 +160,21 @@ export const SEASON_PRESETS = {
     label: '冬',
     badge: 'WINTER · 皑雪',
     accent: '#6f92b8',
-    sunColor: new THREE.Color('#eef5ff'),
-    sunIntensity: 2.38,
+    sunColor: new THREE.Color('#f4f8ff'),
+    sunIntensity: 2.52,
     fillColor: new THREE.Color('#cce0fa'),
-    fillIntensity: 0.74,
-    hemiSkyColor: new THREE.Color('#e6f0ff'),
+    fillIntensity: 0.78,
+    hemiSkyColor: new THREE.Color('#e8f2ff'),
     hemiGroundColor: new THREE.Color('#a4aebc'),
-    hemiIntensity: 1.00,
-    ambientColor: new THREE.Color('#ebf0f8'),
-    ambientIntensity: 0.40,
+    hemiIntensity: 1.02,
+    ambientColor: new THREE.Color('#edf2fa'),
+    ambientIntensity: 0.42,
     backdropTop: new THREE.Color().setRGB(2.42, 2.26, 2.10),
     backdropMid: new THREE.Color().setRGB(2.34, 2.14, 1.98),
     backdropBottom: new THREE.Color().setRGB(2.08, 1.84, 1.66),
     haloColor: new THREE.Color().setRGB(2.98, 2.86, 2.74),
     haloStrength: 0.58,
-    interiorBoost: 1.82, // Rich warm boutique glow contrasting snowy exteriors!
+    interiorBoost: 1.92, // Rich warm boutique glow contrasting snowy exteriors!
     snowWeight: 1.0,
     autumnLitterWeight: 0.0,
     canopyPalettes: [

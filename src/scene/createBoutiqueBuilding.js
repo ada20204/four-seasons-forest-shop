@@ -303,7 +303,9 @@ export function createBoutiqueBuilding() {
   });
 
   const interiorWallMat = new THREE.MeshStandardMaterial({
-    color: new THREE.Color('#f2dec0'),
+    color: new THREE.Color('#f3d8b0'),
+    emissive: new THREE.Color('#ff9d3b'),
+    emissiveIntensity: 0.08,
     roughness: 0.84,
     metalness: 0.01,
     envMapIntensity: 0.25,
@@ -530,17 +532,17 @@ export function createBoutiqueBuilding() {
   const soffitLightPositions = [-3.65, -2.75, -1.85, -0.85, 0.42, 1.84];
   soffitLightPositions.forEach((lx) => {
     const zPos = lx < -1.4 ? 0.34 : 0.62;
-    const disc = new THREE.Mesh(new THREE.CylinderGeometry(0.052, 0.052, 0.015, 12), warmLedMat);
+    const disc = new THREE.Mesh(new THREE.CylinderGeometry(0.068, 0.068, 0.016, 12), warmLedMat);
     disc.position.set(lx, 2.855, zPos);
     group.add(disc);
   });
 
   // Warm grazing spot lights illuminating the cedar timber slats & storefront threshold
-  const slatWarmLight = new THREE.PointLight('#ff9c3a', 4.8, 5.2, 1.5);
+  const slatWarmLight = new THREE.PointLight('#ff942c', 5.8, 5.4, 1.45);
   slatWarmLight.position.set(-2.75, 2.65, 0.42);
   group.add(slatWarmLight);
 
-  const porchWarmLight = new THREE.PointLight('#ffb454', 3.8, 4.8, 1.55);
+  const porchWarmLight = new THREE.PointLight('#ffaa44', 4.4, 5.0, 1.5);
   porchWarmLight.position.set(0.42, 2.68, 0.72);
   group.add(porchWarmLight);
 
@@ -549,11 +551,11 @@ export function createBoutiqueBuilding() {
   // ==========================================================
 
   // Interior Ceiling LED Spots & Real PointLights
-  const interiorLight1FMain = new THREE.PointLight('#ffb152', 9.5, 8.2, 1.35);
+  const interiorLight1FMain = new THREE.PointLight('#ffa23c', 11.8, 8.8, 1.32);
   interiorLight1FMain.position.set(0.45, 2.58, -1.35);
   group.add(interiorLight1FMain);
 
-  const interiorLight1FMannequin = new THREE.PointLight('#ffc36b', 4.8, 5.2, 1.45);
+  const interiorLight1FMannequin = new THREE.PointLight('#ffb852', 5.8, 5.6, 1.42);
   interiorLight1FMannequin.position.set(1.85, 2.45, -0.55);
   group.add(interiorLight1FMannequin);
 
@@ -877,16 +879,16 @@ export function createBoutiqueBuilding() {
   group.add(innerWall2F);
 
   // 2F Interior ceiling spotlights & point lights
-  const interiorLight2F = new THREE.PointLight('#ffb152', 9.0, 8.0, 1.35);
+  const interiorLight2F = new THREE.PointLight('#ffa23c', 11.2, 8.6, 1.32);
   interiorLight2F.position.set(1.68, 5.45, -0.55);
   group.add(interiorLight2F);
 
-  const interiorLight2FL = new THREE.PointLight('#ffbd62', 3.6, 5.2, 1.45);
+  const interiorLight2FL = new THREE.PointLight('#ffb048', 4.8, 5.6, 1.42);
   interiorLight2FL.position.set(0.55, 4.95, 0.05);
   group.add(interiorLight2FL);
 
   for (const lx of [0.35, 1.68, 3.02]) {
-    const disc2 = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.055, 0.015, 10), warmLedMat);
+    const disc2 = new THREE.Mesh(new THREE.CylinderGeometry(0.068, 0.068, 0.016, 10), warmLedMat);
     disc2.position.set(lx, 5.79, -0.25);
     group.add(disc2);
   }
@@ -944,6 +946,7 @@ export function createBoutiqueBuilding() {
     warmLights,
     windowGlowMats,
     warmLedMat,
+    interiorWallMat,
     bouquetMat,
     indoorLeafMat,
   };

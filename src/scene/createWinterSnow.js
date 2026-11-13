@@ -268,7 +268,7 @@ function createContinuousGroundSnowGeometry({ outlineCurve, stones, patioOrigin 
     const entryWalkMask = boxExclusion(x, z, -0.60, 1.44, 0.55, 1.85, 0.32);
     top = THREE.MathUtils.lerp(top, 0.155, entryWalkMask);
 
-    // 3. Carve crisp oval pockets around each sandstone stepping stone + plump snow collar
+    // 3. Carve natural pockets around stepping stones with plump hugging snow collars
     let maxStoneClear = 0;
     let stoneCollar = 0;
     for (let s = 0; s < stones.length; s++) {
@@ -279,11 +279,11 @@ function createContinuousGroundSnowGeometry({ outlineCurve, stones, patioOrigin 
       const sn = Math.sin(-st.rot);
       const lx = dx * cs - dz * sn;
       const lz = dx * sn + dz * cs;
-      const normDist = Math.hypot(lx / (st.rx * 1.14), lz / (st.rz * 1.14));
-      if (normDist < 1.38) {
-        const clear = 1 - THREE.MathUtils.smoothstep(normDist, 0.82, 1.14);
+      const normDist = Math.hypot(lx / (st.rx * 1.12), lz / (st.rz * 1.12));
+      if (normDist < 1.36) {
+        const clear = 1 - THREE.MathUtils.smoothstep(normDist, 0.70, 1.06);
         if (clear > maxStoneClear) maxStoneClear = clear;
-        const rimBump = Math.exp(-Math.pow((normDist - 1.24) / 0.22, 2)) * 0.045;
+        const rimBump = Math.exp(-Math.pow((normDist - 1.18) / 0.22, 2)) * 0.055;
         if (rimBump > stoneCollar) stoneCollar = rimBump;
       }
     }
@@ -573,20 +573,35 @@ export function createWinterSnow({ island, botanical, patio }) {
   const groundMoundData = [];
   const gmDummy = new THREE.Object3D();
 
-  // Entrance step side pillows (leaving warm beige center walking tread clear!)
+  // Entrance step side pillows & sculpted stepping stone shoulder drifts (keeping walking path legible)
   island.stepSpecs.forEach((st, idx) => {
     [-1, 1].forEach((side) => {
       groundMoundData.push({
-        x: st.x + side * (st.w * 0.40),
+        x: st.x + side * (st.w * 0.36),
         y: st.y + st.h * 0.45,
         z: st.z,
         rotX: 0,
         rotY: (idx * 0.7 + side) * 1.1,
         rotZ: 0,
-        rx: 0.27 * (0.92 + (idx % 2) * 0.16),
-        ry: (0.14 / 0.44) * (0.92 + (side > 0 ? 0.10 : 0)),
-        rz: 0.22 * 0.92,
+        rx: 0.36 * (0.92 + (idx % 2) * 0.14),
+        ry: (0.145 / 0.44) * (0.94 + (side > 0 ? 0.10 : 0)),
+        rz: 0.26 * 0.94,
       });
+    });
+  });
+
+  island.stones.forEach((st, idx) => {
+    const side = idx % 2 === 0 ? -1 : 1;
+    groundMoundData.push({
+      x: st.x + side * (st.rx * 0.56),
+      y: 0.312,
+      z: st.z + (idx === 0 ? 0.10 : -0.05),
+      rotX: 0,
+      rotY: st.rot + side * 0.35,
+      rotZ: 0,
+      rx: st.rx * 0.44,
+      ry: 0.072 / 0.44,
+      rz: st.rz * 0.48,
     });
   });
 
@@ -692,13 +707,13 @@ export function createWinterSnow({ island, botanical, patio }) {
   const canopyBaseData = [];
 
   clusters.forEach((cl, idx) => {
-    const posY = cl.y - cl.radius * 0.02;
+    const posY = cl.y - cl.radius * 0.08;
     const rotX = (rng() - 0.5) * 0.24;
     const rotY = rng() * Math.PI * 2;
     const rotZ = (rng() - 0.5) * 0.24;
-    const rx = cl.radius * (1.02 + rng() * 0.20);
+    const rx = cl.radius * (1.10 + rng() * 0.20);
     const ry = cl.radius * (0.68 + rng() * 0.20);
-    const rz = cl.radius * (1.00 + rng() * 0.20);
+    const rz = cl.radius * (1.08 + rng() * 0.20);
 
     canopyBaseData.push({ x: cl.x, y: posY, z: cl.z, rotX, rotY, rotZ, rx, ry, rz });
     dummy.position.set(cl.x, posY, cl.z);
@@ -740,9 +755,9 @@ export function createWinterSnow({ island, botanical, patio }) {
           x: c.x + Math.cos(ang) * rad,
           y: yBase + Math.sin(k + t) * 0.08,
           z: c.z + Math.sin(ang) * rad,
-          rx: tierR * 0.42,
-          ry: tierR * 0.28,
-          rz: tierR * 0.40,
+          rx: tierR * 0.48,
+          ry: tierR * 0.34,
+          rz: tierR * 0.46,
           rotX: Math.sin(ang) * 0.28,
           rotY: -ang,
           rotZ: -Math.cos(ang) * 0.28,
@@ -775,9 +790,9 @@ export function createWinterSnow({ island, botanical, patio }) {
           x: cp.x + Math.cos(ang) * rL * 0.68,
           y: yL,
           z: cp.z + Math.sin(ang) * rL * 0.68,
-          rx: rL * 0.48,
-          ry: rL * 0.38,
-          rz: rL * 0.48,
+          rx: rL * 0.54,
+          ry: rL * 0.42,
+          rz: rL * 0.54,
           rotX: Math.sin(ang) * 0.22,
           rotY: -ang,
           rotZ: -Math.cos(ang) * 0.22,
