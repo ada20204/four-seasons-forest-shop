@@ -20,6 +20,7 @@ body {
   color: #2f2924;
   font-family: 'Inter', 'PingFang SC', 'Microsoft YaHei', system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
+  transition: background 0.45s ease, color 0.45s ease;
 }
 
 .stage-shell {
@@ -61,12 +62,13 @@ body {
   letter-spacing: 0.22em;
   text-transform: uppercase;
   color: rgba(65, 52, 42, 0.62);
+  transition: color 0.4s ease, text-shadow 0.4s ease;
 }
 
 .brand-title-row {
   display: flex;
   align-items: baseline;
-  gap: 10px;
+  gap: 8px;
   flex-wrap: wrap;
 }
 
@@ -76,6 +78,7 @@ body {
   font-weight: 500;
   letter-spacing: 0.04em;
   color: rgba(45, 36, 30, 0.88);
+  transition: color 0.4s ease, text-shadow 0.4s ease;
 }
 
 .season-badge {
@@ -89,6 +92,9 @@ body {
   color: rgba(56, 45, 36, 0.78);
   background: rgba(255, 251, 245, 0.68);
   border: 1px solid rgba(110, 88, 66, 0.14);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: color 0.4s ease, background 0.4s ease, border-color 0.4s ease;
 }
 
 .hud-panel {
@@ -100,14 +106,16 @@ body {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  padding: 8px 13px;
+  padding: 8px 14px;
   border-radius: 14px;
   background: rgba(255, 251, 245, 0.84);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(110, 88, 66, 0.14);
   box-shadow: 0 8px 24px rgba(64, 48, 34, 0.09);
+  width: max-content;
   max-width: calc(100vw - 24px);
+  transition: background 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease;
 }
 
 .hud-row {
@@ -119,7 +127,7 @@ body {
 
 .hud-row--primary {
   justify-content: space-between;
-  gap: 14px;
+  gap: 12px;
 }
 
 .hud-section {
@@ -194,7 +202,12 @@ body {
   padding: 5px 12px;
 }
 
-.season-dot {
+.time-btn {
+  padding: 5px 11px;
+}
+
+.season-dot,
+.time-dot {
   display: inline-block;
   width: 7px;
   height: 7px;
@@ -206,6 +219,121 @@ body {
 .hud-hint {
   font-size: 11px;
   color: rgba(65, 52, 42, 0.56);
+  transition: color 0.4s ease;
+}
+
+body.theme-golden {
+  background: #2c202a;
+  color: #f6ede2;
+}
+
+body.theme-golden .brand-kicker {
+  color: rgba(255, 232, 206, 0.74);
+  text-shadow: 0 1px 10px rgba(20, 12, 18, 0.45);
+}
+
+body.theme-golden .brand-badge h1 {
+  color: rgba(255, 247, 236, 0.96);
+  text-shadow: 0 2px 14px rgba(18, 10, 16, 0.45);
+}
+
+body.theme-golden .season-badge {
+  color: rgba(255, 239, 219, 0.92);
+  background: rgba(48, 30, 38, 0.64);
+  border-color: rgba(255, 206, 158, 0.24);
+}
+
+body.theme-golden .hud-panel {
+  background: rgba(39, 27, 34, 0.8);
+  border-color: rgba(255, 205, 162, 0.22);
+  box-shadow: 0 10px 28px rgba(14, 7, 12, 0.34);
+}
+
+body.theme-golden .hud-label,
+body.theme-golden .hud-hint {
+  color: rgba(247, 228, 206, 0.74);
+}
+
+body.theme-golden .pill-btn,
+body.theme-golden .ghost-btn {
+  background: rgba(68, 46, 52, 0.68);
+  border-color: rgba(255, 208, 164, 0.18);
+  color: #f7eadb;
+}
+
+body.theme-golden .pill-btn:hover,
+body.theme-golden .ghost-btn:hover {
+  background: rgba(92, 62, 66, 0.92);
+  border-color: rgba(255, 214, 174, 0.36);
+}
+
+body.theme-golden .pill-btn.is-active {
+  background: #eb9d5f;
+  color: #261611;
+  border-color: #f4b783;
+}
+
+body.theme-golden .ghost-btn.is-on {
+  background: rgba(235, 157, 95, 0.22);
+  border-color: rgba(244, 183, 131, 0.56);
+  color: #ffe7ce;
+}
+
+body.theme-night {
+  background: #0c1324;
+  color: #eaf0fb;
+}
+
+body.theme-night .brand-kicker {
+  color: rgba(188, 206, 238, 0.74);
+  text-shadow: 0 1px 10px rgba(4, 8, 18, 0.65);
+}
+
+body.theme-night .brand-badge h1 {
+  color: rgba(244, 248, 255, 0.96);
+  text-shadow: 0 2px 14px rgba(4, 8, 20, 0.72);
+}
+
+body.theme-night .season-badge {
+  color: rgba(226, 236, 255, 0.9);
+  background: rgba(16, 25, 45, 0.7);
+  border-color: rgba(162, 189, 236, 0.24);
+}
+
+body.theme-night .hud-panel {
+  background: rgba(14, 21, 38, 0.82);
+  border-color: rgba(154, 182, 232, 0.22);
+  box-shadow: 0 12px 32px rgba(2, 6, 16, 0.52);
+}
+
+body.theme-night .hud-label,
+body.theme-night .hud-hint {
+  color: rgba(202, 218, 246, 0.72);
+}
+
+body.theme-night .pill-btn,
+body.theme-night .ghost-btn {
+  background: rgba(28, 39, 64, 0.74);
+  border-color: rgba(160, 186, 232, 0.18);
+  color: #e2eaf8;
+}
+
+body.theme-night .pill-btn:hover,
+body.theme-night .ghost-btn:hover {
+  background: rgba(42, 57, 92, 0.94);
+  border-color: rgba(186, 208, 248, 0.36);
+}
+
+body.theme-night .pill-btn.is-active {
+  background: #e4a965;
+  color: #191f2e;
+  border-color: #f0be82;
+}
+
+body.theme-night .ghost-btn.is-on {
+  background: rgba(228, 169, 101, 0.2);
+  border-color: rgba(240, 190, 130, 0.54);
+  color: #f6e0be;
 }
 
 @media (max-width: 720px) {
@@ -234,31 +362,39 @@ body {
     width: calc(100vw - 16px);
     max-width: calc(100vw - 16px);
     padding: 7px 9px;
-    gap: 6px;
+    gap: 5px;
     border-radius: 12px;
   }
 
   .hud-row--primary {
-    gap: 6px;
+    gap: 5px 6px;
     justify-content: space-between;
   }
 
   .hud-section {
-    gap: 5px;
+    gap: 4px;
   }
 
   .hud-label {
     display: none;
   }
 
-  .hud-group--seasons {
+  .hud-group--seasons,
+  .hud-group--times {
     gap: 4px;
     flex-wrap: nowrap;
   }
 
   .hud-actions {
+    flex: 1 1 100%;
+    justify-content: space-between;
     gap: 4px;
     flex-wrap: nowrap;
+  }
+
+  .hud-actions .ghost-btn {
+    flex: 1 1 auto;
+    justify-content: center;
   }
 
   .hud-group--views {
@@ -281,11 +417,21 @@ body {
   .pill-btn,
   .ghost-btn {
     font-size: 11px;
-    padding: 4px 8px;
+    padding: 4px 7px;
     gap: 4px;
   }
 
+  .season-dot,
+  .time-dot {
+    width: 6px;
+    height: 6px;
+  }
+
   .season-btn {
-    padding: 4px 9px;
+    padding: 4px 8px;
+  }
+
+  .time-btn {
+    padding: 4px 7px;
   }
 }

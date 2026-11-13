@@ -261,6 +261,35 @@ export function createOutdoorPatio() {
     group.add(fl);
   }
 
+  // Miniature matte-bronze & frosted amber candle lantern on tabletop (glows softly at dusk & night)
+  const lanternBaseMat = new THREE.MeshStandardMaterial({ color: '#2b2623', roughness: 0.48, metalness: 0.55 });
+  const lanternBulbMat = new THREE.MeshStandardMaterial({
+    color: new THREE.Color('#fff5dd'),
+    emissive: new THREE.Color('#ffaa42'),
+    emissiveIntensity: 0.0,
+    roughness: 0.25,
+  });
+  const lanternGroup = new THREE.Group();
+  lanternGroup.position.set(-0.26, 0.763, 0.22);
+  const lanternFoot = new THREE.Mesh(new THREE.CylinderGeometry(0.056, 0.062, 0.022, 12), lanternBaseMat);
+  lanternFoot.position.y = 0.011;
+  const lanternGlobe = new THREE.Mesh(new THREE.CylinderGeometry(0.046, 0.042, 0.125, 12), lanternBulbMat);
+  lanternGlobe.position.y = 0.084;
+  const lanternCap = new THREE.Mesh(new THREE.CylinderGeometry(0.036, 0.064, 0.036, 12), lanternBaseMat);
+  lanternCap.position.y = 0.162;
+  lanternGroup.add(lanternFoot, lanternGlobe, lanternCap);
+  group.add(lanternGroup);
+
+  const lanternLight = new THREE.PointLight('#ff9f38', 0, 4.8, 1.45);
+  lanternLight.position.set(-0.26, 0.94, 0.22);
+  group.add(lanternLight);
+
+  function setCandleWeight(w) {
+    const cw = THREE.MathUtils.clamp(w, 0, 1);
+    lanternLight.intensity = cw * 3.2;
+    lanternBulbMat.emissiveIntensity = cw * 6.4;
+  }
+
   // Market Parasol through center of bistro table
   const parasol = createMarketParasol(teakMat);
   group.add(parasol);
@@ -289,5 +318,6 @@ export function createOutdoorPatio() {
     flowerMat,
     worldOrigin: group.position.clone(),
     chairSpots,
+    setCandleWeight,
   };
 }

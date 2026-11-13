@@ -153,6 +153,48 @@ async function run() {
       await snap(sessionId, `winter-${view}.png`);
     }
 
+    // 2b. Day -> Dusk -> Moonlit Night celestial & atmospheric verification
+    await exec(
+      sessionId,
+      `
+      window.__STAGE2__.setView('overview', true);
+      window.__STAGE2__.setSeason('summer', true);
+      window.__STAGE2__.setTimeOfDay('golden', true);
+    `
+    );
+    await new Promise((r) => setTimeout(r, 550));
+    await snap(sessionId, 'summer-golden.png');
+
+    await exec(sessionId, `window.__STAGE2__.setTimeOfDay('night', true);`);
+    await new Promise((r) => setTimeout(r, 650));
+    const summerNightCheck = await exec(
+      sessionId,
+      `
+      return {
+        time: window.__STAGE2__.getTimeOfDay(),
+        theme: window.__STAGE2__.getTheme(),
+        fireflies: window.__STAGE2__.getFireflyCount(),
+      };
+    `
+    );
+    if (summerNightCheck.fireflies <= 0 || summerNightCheck.theme !== 'theme-night') {
+      throw new Error(`Summer night check failed: ${JSON.stringify(summerNightCheck)}`);
+    }
+    await snap(sessionId, 'summer-night.png');
+
+    await exec(sessionId, `window.__STAGE2__.setSeason('winter', true);`);
+    await new Promise((r) => setTimeout(r, 550));
+    await snap(sessionId, 'winter-night.png');
+
+    await exec(sessionId, `window.__STAGE2__.setView('interior', true);`);
+    await new Promise((r) => setTimeout(r, 450));
+    await snap(sessionId, 'winter-night-interior.png');
+
+    await exec(
+      sessionId,
+      `window.__STAGE2__.setTimeOfDay('day', true); window.__STAGE2__.setView('overview', true);`
+    );
+
     // 3. Desktop orbit drag & wheel zoom checks
     await exec(sessionId, `window.__STAGE2__.setView('overview', true);`);
     await new Promise((r) => setTimeout(r, 300));
@@ -216,6 +258,20 @@ async function run() {
     await new Promise((r) => setTimeout(r, 900));
     await snap(sessionId, 'mobile-winter.png');
 
+    await exec(sessionId, `document.getElementById('toggle-cycle').click();`);
+    await new Promise((r) => setTimeout(r, 420));
+    const cycleMidProgress = await exec(
+      sessionId,
+      `return { on: window.__STAGE2__.getAutoCycle(), p: window.__STAGE2__.getTimeProgress() };`
+    );
+    if (!cycleMidProgress.on || cycleMidProgress.p <= 0) {
+      throw new Error(`Auto-cycle DOM toggle failed: ${JSON.stringify(cycleMidProgress)}`);
+    }
+
+    await exec(sessionId, `document.querySelector('[data-time="night"]').click();`);
+    await new Promise((r) => setTimeout(r, 1550));
+    await snap(sessionId, 'mobile-winter-night.png');
+
     const mobileMetrics = await exec(
       sessionId,
       `
@@ -223,6 +279,9 @@ async function run() {
       const rect = hud.getBoundingClientRect();
       return {
         season: window.__STAGE2__.getSeason(),
+        time: window.__STAGE2__.getTimeOfDay(),
+        autoCycle: window.__STAGE2__.getAutoCycle(),
+        theme: window.__STAGE2__.getTheme(),
         hudHeight: Math.round(rect.height),
         hudRatio: Number((rect.height / window.innerHeight).toFixed(3)),
         hudOverflowX: rect.width > window.innerWidth,
@@ -237,6 +296,8 @@ async function run() {
       particleCounts,
       offCount,
       restoredCount,
+      summerNightCheck,
+      cycleMidProgress,
       dragDelta: Number(dragDelta.toFixed(3)),
       zoomDelta: Number(zoomDelta.toFixed(3)),
       mobileMetrics,
@@ -248,6 +309,9 @@ async function run() {
     }
     if (mobileMetrics.season !== 'winter') {
       throw new Error(`Mobile DOM click season failed: got ${mobileMetrics.season}`);
+    }
+    if (mobileMetrics.time !== 'night' || mobileMetrics.autoCycle !== false) {
+      throw new Error(`Mobile DOM click night failed: ${JSON.stringify(mobileMetrics)}`);
     }
     if (mobileMetrics.hudOverflowX) {
       throw new Error('Mobile HUD overflows horizontally');

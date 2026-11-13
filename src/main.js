@@ -24,6 +24,12 @@ import { createBotanicalGarden } from './scene/createBotanicalGarden.js';
 import { createWinterSnow } from './scene/createWinterSnow.js';
 import { createSeasonalParticles } from './scene/createSeasonalParticles.js';
 import { SEASON_ORDER, SEASON_PRESETS } from './scene/seasonPresets.js';
+import {
+  TIME_ORDER,
+  TIME_PROGRESS,
+  TIME_PRESETS,
+  sampleTimeState,
+} from './scene/timePresets.js';
 import { AssemblyController } from './core/assemblyController.js';
 
 const urlParams = new URLSearchParams(window.location.search);
@@ -32,6 +38,9 @@ const prefersReducedMotion =
 const skipIntroParam = urlParams.get('noIntro') === '1' || prefersReducedMotion;
 const querySeason = urlParams.get('season');
 const initialSeason = SEASON_PRESETS[querySeason] ? querySeason : 'summer';
+const queryTime = urlParams.get('time');
+const initialTimeKey = TIME_PRESETS[queryTime] ? queryTime : 'day';
+const initialAutoCycle = urlParams.get('cycle') === '1' && !prefersReducedMotion;
 
 const stageEl = document.getElementById('stage');
 
@@ -225,17 +234,28 @@ if (skipIntroParam) {
   assembly.play();
 }
 
-// 7. Season Interpolation Engine
+// 7. Season & Day-to-Night Atmosphere Engine
 const seasonBadgeEl = document.getElementById('season-badge');
+const timeBadgeEl = document.getElementById('time-badge');
 const seasonButtons = Array.from(document.querySelectorAll('[data-season]'));
+const timeButtons = Array.from(document.querySelectorAll('[data-time]'));
+const cycleBtn = document.getElementById('toggle-cycle');
 
 let currentSeasonKey = initialSeason;
+let currentSeasonSnapshot = initPreset;
 let activeTransition = {
   from: initPreset,
   to: initPreset,
   progress: 1.0,
   duration: 0.68,
 };
+
+let currentTimeKey = initialTimeKey;
+let timeProgress = TIME_PROGRESS[initialTimeKey];
+let timeTransition = null;
+let autoCycle = initialAutoCycle;
+let autoCycleDir = initialTimeKey === 'night' ? -1 : 1;
+let currentTimeState = sampleTimeState(timeProgress);
 
 function lerpCanopyPalette(palA, palB, t) {
   const cO = new THREE.Color(palA.outer).lerp(new THREE.Color(palB.outer), t);
@@ -287,45 +307,115 @@ function captureBlendedSnapshot(a, b, t) {
   };
 }
 
-function applySeasonVisuals(presetA, presetB, t) {
-  const blend = THREE.MathUtils.clamp(t, 0, 1);
+const _tempSun = new THREE.Color();
+const _tempFill = new THREE.Color();
+const _tempSky = new THREE.Color();
+const _tempGround = new THREE.Color();
+const _tempAmb = new THREE.Color();
 
-  dirLight.color.lerpColors(presetA.sunColor, presetB.sunColor, blend);
-  dirLight.intensity = THREE.MathUtils.lerp(presetA.sunIntensity, presetB.sunIntensity, blend);
-  fillLight.color.lerpColors(presetA.fillColor, presetB.fillColor, blend);
-  fillLight.intensity = THREE.MathUtils.lerp(presetA.fillIntensity, presetB.fillIntensity, blend);
-  hemiLight.color.lerpColors(presetA.hemiSkyColor, presetB.hemiSkyColor, blend);
-  hemiLight.groundColor.lerpColors(presetA.hemiGroundColor, presetB.hemiGroundColor, blend);
-  hemiLight.intensity = THREE.MathUtils.lerp(presetA.hemiIntensity, presetB.hemiIntensity, blend);
-  ambientLight.color.lerpColors(presetA.ambientColor, presetB.ambientColor, blend);
-  ambientLight.intensity = THREE.MathUtils.lerp(presetA.ambientIntensity, presetB.ambientIntensity, blend);
+function updateCelestialParallax() {
+  const camAzimuth = Math.atan2(
+    camera.position.x - controls.target.x,
+    camera.position.z - controls.target.z
+  );
+  const azDelta = Math.sin(camAzimuth - 0.096);
+  sharedUniforms.uMoonPos.value.set(
+    THREE.MathUtils.clamp(currentTimeState.moonPos.x - azDelta * 0.055, 0.56, 0.89),
+    currentTimeState.moonPos.y
+  );
+  sharedUniforms.uSunPos.value.set(
+    THREE.MathUtils.clamp(currentTimeState.sunPos.x - azDelta * 0.045, 0.04, 0.90),
+    currentTimeState.sunPos.y
+  );
+}
 
-  sharedUniforms.uBackdropTop.value.lerpColors(presetA.backdropTop, presetB.backdropTop, blend);
-  sharedUniforms.uBackdropMid.value.lerpColors(presetA.backdropMid, presetB.backdropMid, blend);
-  sharedUniforms.uBackdropBottom.value.lerpColors(presetA.backdropBottom, presetB.backdropBottom, blend);
-  sharedUniforms.uHaloColor.value.lerpColors(presetA.haloColor, presetB.haloColor, blend);
-  sharedUniforms.uHaloStrength.value = THREE.MathUtils.lerp(presetA.haloStrength, presetB.haloStrength, blend);
+function applyAtmosphere(seasonSnap = currentSeasonSnapshot, progress = timeProgress) {
+  const time = sampleTimeState(progress);
+  currentTimeState = time;
+  const nightMix = THREE.MathUtils.smoothstep(progress, 0.42, 0.96);
 
-  const boost = THREE.MathUtils.lerp(presetA.interiorBoost, presetB.interiorBoost, blend);
+  // Celestial key & bounce fill directions arch smoothly above the horizon
+  dirLight.position.copy(time.sunDir).multiplyScalar(22);
+  fillLight.position.copy(time.fillDir).multiplyScalar(18);
+
+  _tempSun.copy(seasonSnap.sunColor).multiply(time.sunTint);
+  dirLight.color.lerpColors(_tempSun, time.sunTint, time.moonLightOverride);
+  dirLight.intensity = seasonSnap.sunIntensity * time.sunMult;
+
+  _tempFill.copy(seasonSnap.fillColor).multiply(time.fillTint);
+  fillLight.color.lerpColors(_tempFill, time.fillTint, time.moonLightOverride * 0.85);
+  fillLight.intensity = seasonSnap.fillIntensity * time.fillMult;
+
+  const skyBlend = Math.max(time.moonLightOverride, time.skyOverride * 0.65);
+  _tempSky.copy(seasonSnap.hemiSkyColor).lerp(time.hemiSkyTint, skyBlend);
+  _tempGround.copy(seasonSnap.hemiGroundColor).lerp(time.hemiGroundTint, Math.max(time.moonLightOverride, time.skyOverride * 0.7));
+  hemiLight.color.copy(_tempSky);
+  hemiLight.groundColor.copy(_tempGround);
+  hemiLight.intensity = seasonSnap.hemiIntensity * time.hemiMult;
+
+  _tempAmb.copy(seasonSnap.ambientColor).lerp(time.hemiSkyTint, time.moonLightOverride * 0.85);
+  ambientLight.color.copy(_tempAmb);
+  ambientLight.intensity = seasonSnap.ambientIntensity * time.ambientMult;
+
+  // Sky cyclorama, sunset scatter, stars & moon
+  sharedUniforms.uBackdropTop.value.copy(seasonSnap.backdropTop).lerp(time.skyTop, time.backdropMix);
+  sharedUniforms.uBackdropMid.value.copy(seasonSnap.backdropMid).lerp(time.skyMid, time.backdropMix);
+  sharedUniforms.uBackdropBottom.value.copy(seasonSnap.backdropBottom).lerp(time.skyBottom, time.backdropMix);
+  sharedUniforms.uHaloColor.value.copy(seasonSnap.haloColor).lerp(time.haloColor, time.backdropMix);
+  sharedUniforms.uHaloStrength.value = THREE.MathUtils.lerp(seasonSnap.haloStrength, time.haloStrength, time.backdropMix);
+  sharedUniforms.uMoonMix.value = time.moonMix;
+  sharedUniforms.uSunOrbMix.value = time.sunOrbMix;
+  sharedUniforms.uStarStrength.value = time.starStrength;
+  updateCelestialParallax();
+
+  // Reflections, crevice AO contrast & selective bloom threshold
+  scene.environmentIntensity = LIGHTING_BASELINE.envIntensity * time.envMult;
+  if (typeof n8aoPass !== 'undefined' && n8aoPass) {
+    n8aoPass.configuration.color.copy(time.aoColor);
+    n8aoPass.configuration.intensity = time.aoIntensity;
+  }
+  if (typeof bloomEffect !== 'undefined' && bloomEffect) {
+    bloomEffect.luminanceMaterial.threshold = time.bloomThreshold;
+    bloomEffect.intensity = time.bloomIntensity;
+  }
+
+  // Balanced interior storefront warmth + exterior bollards + patio tabletop candle
+  const seasonBoost = seasonSnap.interiorBoost;
+  const lightingDrive =
+    Math.max(seasonBoost, time.interiorTarget) +
+    (seasonBoost - 1) * (0.18 * (1 - nightMix) + 0.25 * nightMix);
+
   building.warmLights.forEach(({ light, baseIntensity }) => {
-    light.intensity = baseIntensity * boost;
+    light.intensity = baseIntensity * lightingDrive;
   });
   building.windowGlowMats.forEach(({ mat, baseIntensity }) => {
-    mat.emissiveIntensity = baseIntensity * (1 + (boost - 1) * 0.85);
+    mat.emissiveIntensity = baseIntensity * (1 + (lightingDrive - 1) * 0.85);
   });
-  building.warmLedMat.emissiveIntensity = baseLedEmissive * (1 + (boost - 1) * 0.45);
-  building.interiorWallMat.emissiveIntensity = baseInteriorWallEmissive + Math.max(0, boost - 1) * 0.44;
+  building.warmLedMat.emissiveIntensity = baseLedEmissive * (1 + (lightingDrive - 1) * 0.45);
+  building.interiorWallMat.emissiveIntensity =
+    baseInteriorWallEmissive + THREE.MathUtils.clamp((lightingDrive - 1.0) * 0.22, 0.0, 0.36);
+
+  const bollardDrive = Math.max(seasonBoost, time.bollardMult) + (seasonBoost - 1) * 0.18 * nightMix;
   island.bollardLights.forEach(({ light, baseIntensity }) => {
-    light.intensity = baseIntensity * boost;
+    light.intensity = baseIntensity * bollardDrive;
   });
-  island.bollardBulbMat.emissiveIntensity = baseBollardEmissive * (1 + (boost - 1) * 0.75);
+  const bollardBulbDrive = Math.max(1 + (seasonBoost - 1) * 0.75, time.bollardBulbMult);
+  island.bollardBulbMat.emissiveIntensity = baseBollardEmissive * bollardBulbDrive;
 
-  building.bouquetMat.color.lerpColors(presetA.bouquetTint, presetB.bouquetTint, blend);
-  building.indoorLeafMat.color.lerpColors(presetA.planterLeafTint, presetB.planterLeafTint, blend);
-  patio.flowerMat.color.lerpColors(presetA.patioFlowerTint, presetB.patioFlowerTint, blend);
+  patio.setCandleWeight(time.patioCandleWeight);
 
-  botanical.updateSeasonTransition(presetA, presetB, blend);
-  winterSnow.setSnowWeight(THREE.MathUtils.lerp(presetA.snowWeight, presetB.snowWeight, blend));
+  // Botanicals & seasonal snow + fireflies
+  building.bouquetMat.color.copy(seasonSnap.bouquetTint);
+  building.indoorLeafMat.color.copy(seasonSnap.planterLeafTint);
+  patio.flowerMat.color.copy(seasonSnap.patioFlowerTint);
+
+  botanical.updateSeasonTransition(seasonSnap, seasonSnap, 1.0);
+  winterSnow.setSnowWeight(seasonSnap.snowWeight);
+  winterSnow.setNightWeight(nightMix);
+  seasonalParticles.setAtmosphere({
+    fireflyWeight: time.fireflyWeight,
+    particleLightFactor: time.particleLightFactor,
+  });
 }
 
 function syncSeasonUI(key) {
@@ -338,6 +428,68 @@ function syncSeasonUI(key) {
   }
 }
 
+function syncTimeUI(key) {
+  const preset = TIME_PRESETS[key];
+  if (!preset) return;
+  timeButtons.forEach((btn) => {
+    btn.classList.toggle('is-active', btn.dataset.time === key);
+  });
+  if (timeBadgeEl) {
+    timeBadgeEl.textContent = preset.badge;
+  }
+  document.body.classList.remove('theme-day', 'theme-golden', 'theme-night');
+  document.body.classList.add(`theme-${preset.theme}`);
+}
+
+function syncCycleUI(flag) {
+  if (!cycleBtn) return;
+  cycleBtn.textContent = flag ? '流转: 开' : '流转: 关';
+  cycleBtn.classList.toggle('is-on', flag);
+  cycleBtn.setAttribute('aria-pressed', String(flag));
+}
+
+function setAutoCycle(flag) {
+  autoCycle = Boolean(flag);
+  if (autoCycle) {
+    timeTransition = null;
+    if (timeProgress >= 0.99) autoCycleDir = -1;
+    else if (timeProgress <= 0.01) autoCycleDir = 1;
+  }
+  syncCycleUI(autoCycle);
+}
+
+function setTimeOfDay(key, instant = false, { stopCycle = true } = {}) {
+  if (TIME_PROGRESS[key] === undefined) return;
+  if (stopCycle && autoCycle) {
+    setAutoCycle(false);
+  }
+  currentTimeKey = key;
+  syncTimeUI(key);
+
+  const targetProgress = TIME_PROGRESS[key];
+  if (instant || prefersReducedMotion) {
+    timeProgress = targetProgress;
+    timeTransition = null;
+    applyAtmosphere(currentSeasonSnapshot, timeProgress);
+    return;
+  }
+
+  const span = Math.abs(targetProgress - timeProgress);
+  if (span < 0.001) {
+    timeProgress = targetProgress;
+    timeTransition = null;
+    applyAtmosphere(currentSeasonSnapshot, timeProgress);
+    return;
+  }
+
+  timeTransition = {
+    fromProgress: timeProgress,
+    toProgress: targetProgress,
+    t: 0,
+    duration: span > 0.7 ? 1.28 : 0.78,
+  };
+}
+
 function setSeason(key, instant = false) {
   const nextPreset = SEASON_PRESETS[key];
   if (!nextPreset) return;
@@ -348,7 +500,8 @@ function setSeason(key, instant = false) {
 
   if (instant || prefersReducedMotion) {
     activeTransition = { from: nextPreset, to: nextPreset, progress: 1.0, duration: 0.68 };
-    applySeasonVisuals(nextPreset, nextPreset, 1.0);
+    currentSeasonSnapshot = nextPreset;
+    applyAtmosphere(currentSeasonSnapshot, timeProgress);
     return;
   }
 
@@ -369,9 +522,9 @@ function setSeason(key, instant = false) {
   };
 }
 
-// Initialize initial season visuals synchronously before first render
-applySeasonVisuals(initPreset, initPreset, 1.0);
 syncSeasonUI(initialSeason);
+syncTimeUI(initialTimeKey);
+syncCycleUI(initialAutoCycle);
 
 // 8. Postprocessing Pipeline (N8AO + Selective Bloom + AgX ToneMapping + SMAA)
 const supportsHalfFloat =
@@ -410,6 +563,9 @@ const toneMappingEffect = new ToneMappingEffect({ mode: ToneMappingMode.AGX });
 const smaaEffect = new SMAAEffect();
 const effectPass = new EffectPass(camera, bloomEffect, toneMappingEffect, smaaEffect);
 composer.addPass(effectPass);
+
+// Initialize initial season & time-of-day visuals once postprocessing passes are ready
+applyAtmosphere(currentSeasonSnapshot, timeProgress);
 
 // 9. Camera View Presets & Smooth Tweening
 let viewTween = null;
@@ -455,6 +611,14 @@ viewButtons.forEach((btn) => {
 seasonButtons.forEach((btn) => {
   btn.addEventListener('click', () => setSeason(btn.dataset.season, false));
 });
+
+timeButtons.forEach((btn) => {
+  btn.addEventListener('click', () => setTimeOfDay(btn.dataset.time, false));
+});
+
+if (cycleBtn) {
+  cycleBtn.addEventListener('click', () => setAutoCycle(!autoCycle));
+}
 
 const resetBtn = document.getElementById('reset-view');
 if (resetBtn) {
@@ -529,6 +693,17 @@ window.addEventListener('keydown', (e) => {
     const prevIdx =
       (SEASON_ORDER.indexOf(currentSeasonKey) - 1 + SEASON_ORDER.length) % SEASON_ORDER.length;
     setSeason(SEASON_ORDER[prevIdx], false);
+  } else if (e.key === '7') {
+    setTimeOfDay('day', false);
+  } else if (e.key === '8') {
+    setTimeOfDay('golden', false);
+  } else if (e.key === '9') {
+    setTimeOfDay('night', false);
+  } else if (e.key === 'l' || e.key === 'L') {
+    setAutoCycle(!autoCycle);
+  } else if (e.key === 'd' || e.key === 'D') {
+    const nextTimeIdx = (TIME_ORDER.indexOf(currentTimeKey) + 1) % TIME_ORDER.length;
+    setTimeOfDay(TIME_ORDER[nextTimeIdx], false);
   } else if (e.key === 'p' || e.key === 'P') {
     setParticlesEnabled(!particlesEnabled);
   }
@@ -581,16 +756,52 @@ function animate(now) {
     assembly.update(dt);
   }
 
+  let atmosphereDirty = false;
+
   if (activeTransition.progress < 1.0) {
     activeTransition.progress = Math.min(
       1.0,
       activeTransition.progress + dt / activeTransition.duration
     );
     const ease = 1 - Math.pow(1 - activeTransition.progress, 3);
-    applySeasonVisuals(activeTransition.from, activeTransition.to, ease);
+    currentSeasonSnapshot =
+      activeTransition.progress >= 1.0
+        ? activeTransition.to
+        : captureBlendedSnapshot(activeTransition.from, activeTransition.to, ease);
+    atmosphereDirty = true;
   }
 
-  seasonalParticles.update(dt, sharedUniforms.uTime.value);
+  if (autoCycle) {
+    timeProgress += autoCycleDir * (dt / 14.0);
+    if (timeProgress >= 1.0) {
+      timeProgress = 1.0;
+      autoCycleDir = -1;
+    } else if (timeProgress <= 0.0) {
+      timeProgress = 0.0;
+      autoCycleDir = 1;
+    }
+    const nearestKey = timeProgress < 0.24 ? 'day' : timeProgress < 0.74 ? 'golden' : 'night';
+    if (nearestKey !== currentTimeKey) {
+      currentTimeKey = nearestKey;
+      syncTimeUI(nearestKey);
+    }
+    atmosphereDirty = true;
+  } else if (timeTransition) {
+    timeTransition.t = Math.min(1.0, timeTransition.t + dt / timeTransition.duration);
+    const t = timeTransition.t;
+    const ease = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    timeProgress = THREE.MathUtils.lerp(timeTransition.fromProgress, timeTransition.toProgress, ease);
+    if (timeTransition.t >= 1.0) {
+      timeTransition = null;
+    }
+    atmosphereDirty = true;
+  }
+
+  if (atmosphereDirty) {
+    applyAtmosphere(currentSeasonSnapshot, timeProgress);
+  }
+
+  seasonalParticles.update(dt, sharedUniforms.uTime.value, camera.quaternion);
 
   if (viewTween) {
     viewTween.t = Math.min(1, viewTween.t + dt / viewTween.duration);
@@ -601,6 +812,7 @@ function animate(now) {
   }
 
   controls.update();
+  updateCelestialParallax();
   renderer.info.reset();
   composer.render();
   frameCount++;
@@ -608,14 +820,21 @@ function animate(now) {
 
 requestAnimationFrame(animate);
 
-// Debug / verification hook for headless multi-season & multi-angle QA checks
+// Debug / verification hook for headless multi-season, day/night & multi-angle QA checks
 window.__STAGE2__ = {
   setView: (key, instant = true) => setCameraView(key, instant),
   setSeason: (key, instant = true) => setSeason(key, instant),
   getSeason: () => currentSeasonKey,
+  setTimeOfDay: (key, instant = true) => setTimeOfDay(key, instant),
+  getTimeOfDay: () => currentTimeKey,
+  getTimeProgress: () => timeProgress,
+  setAutoCycle: (flag) => setAutoCycle(flag),
+  getAutoCycle: () => autoCycle,
   setParticlesEnabled,
   getParticlesEnabled: () => particlesEnabled,
   getParticleCount: () => seasonalParticles.getActiveCount(),
+  getFireflyCount: () => seasonalParticles.getFireflyCount(),
+  getTheme: () => Array.from(document.body.classList).find((c) => c.startsWith('theme-')) || 'theme-day',
   replayAssembly: () => assembly.play(),
   finishAssembly: () => assembly.skip(),
   getAssemblyState: () => ({

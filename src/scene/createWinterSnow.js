@@ -915,6 +915,12 @@ export function createWinterSnow({ island, botanical, patio }) {
     groundMoundInst.instanceMatrix.needsUpdate = true;
   }
 
+  function setNightWeight(nightWeight) {
+    const nw = THREE.MathUtils.clamp(nightWeight, 0, 1);
+    snowMat.emissiveIntensity = 0.045 * (1 - nw * 0.96);
+    snowMat.sheen = 0.38 * (1 - nw * 0.45);
+  }
+
   return {
     group,
     assemblyCarriers: {
@@ -924,5 +930,6 @@ export function createWinterSnow({ island, botanical, patio }) {
       treesPatioCarrier,
     },
     setSnowWeight,
+    setNightWeight,
   };
 }

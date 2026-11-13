@@ -40,6 +40,26 @@ function createPetalTexture() {
   return tex;
 }
 
+function createFireflyTexture() {
+  const c = makeCanvas(64, 64);
+  const ctx = c.getContext('2d');
+  ctx.clearRect(0, 0, 64, 64);
+
+  const grad = ctx.createRadialGradient(32, 32, 1, 32, 32, 30);
+  grad.addColorStop(0.0, 'rgba(255, 252, 224, 1.0)');
+  grad.addColorStop(0.22, 'rgba(255, 220, 118, 0.92)');
+  grad.addColorStop(0.55, 'rgba(255, 178, 56, 0.34)');
+  grad.addColorStop(1.0, 'rgba(255, 160, 40, 0.0)');
+  ctx.fillStyle = grad;
+  ctx.beginPath();
+  ctx.arc(32, 32, 30, 0, Math.PI * 2);
+  ctx.fill();
+
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
+
 function createLeafTexture(cLight, cDark) {
   const c = makeCanvas(96, 96);
   const ctx = c.getContext('2d');
@@ -174,6 +194,43 @@ export function createSeasonalParticles({ initialSeason = 'summer', initiallyEna
   mesh.name = 'SeasonalFallingParticles';
   mesh.frustumCulled = false;
 
+  // Warm additive golden fireflies for Summer Dusk/Night
+  const MAX_FIREFLIES = 44;
+  const fireflyMat = new THREE.MeshBasicMaterial({
+    map: createFireflyTexture(),
+    color: new THREE.Color('#ffea92'),
+    transparent: true,
+    opacity: 0.0,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+    side: THREE.DoubleSide,
+  });
+  const fireflyMesh = new THREE.InstancedMesh(geo, fireflyMat, MAX_FIREFLIES);
+  fireflyMesh.name = 'SummerEveningFireflies';
+  fireflyMesh.frustumCulled = false;
+  fireflyMesh.visible = false;
+
+  const fireflies = Array.from({ length: MAX_FIREFLIES }, () => {
+    const side = rng() > 0.4 ? -1 : 1;
+    const x = side * (3.6 + rng() * 4.4);
+    const z = (rng() - 0.5) * 9.5;
+    const y = 0.65 + rng() * 4.2;
+    return {
+      bx: x,
+      by: y,
+      bz: z,
+      phase: rng() * Math.PI * 2,
+      speed: 0.45 + rng() * 0.7,
+      radius: 0.25 + rng() * 0.55,
+      blinkSpeed: 1.4 + rng() * 2.2,
+      size: 0.17 + rng() * 0.16,
+    };
+  });
+
+  const wrapper = new THREE.Group();
+  wrapper.name = 'SeasonalAtmosphereParticles';
+  wrapper.add(mesh, fireflyMesh);
+
   const particles = Array.from({ length: MAX_COUNT }, () => ({
     x: (rng() - 0.5) * 14.5,
     y: 0.6 + rng() * 10.2,
@@ -194,6 +251,8 @@ export function createSeasonalParticles({ initialSeason = 'summer', initiallyEna
   let currentSeason = initialSeason;
   let enabled = initiallyEnabled;
   let fadeOpacity = 1.0;
+  let fireflyWeight = 0.0;
+  let lightFactor = 1.0;
 
   function respawn(p, startHigh = true) {
     p.x = (rng() - 0.5) * 15.2;
@@ -206,7 +265,7 @@ export function createSeasonalParticles({ initialSeason = 'summer', initiallyEna
     if (!MODE_CONFIGS[season]) return;
     currentSeason = season;
     mat.map = textures[season];
-    mat.color.set(MODE_CONFIGS[season].tint);
+    applyParticleColor();
     mat.needsUpdate = true;
 
     // Cleanly reset all particles immediately on season change so previous leaves/petals never remain!
@@ -215,17 +274,34 @@ export function createSeasonalParticles({ initialSeason = 'summer', initiallyEna
     update(0.016, 0);
   }
 
+  function applyParticleColor() {
+    mat.color.set(MODE_CONFIGS[currentSeason].tint).multiplyScalar(lightFactor);
+    if (currentSeason === 'winter' && lightFactor < 0.95) {
+      mat.color.lerp(new THREE.Color('#c2dcff'), 1 - lightFactor);
+    }
+  }
+
+  function setAtmosphere({ fireflyWeight: fw = 0, particleLightFactor = 1 } = {}) {
+    fireflyWeight = THREE.MathUtils.clamp(fw, 0, 1);
+    lightFactor = THREE.MathUtils.clamp(particleLightFactor, 0.4, 1.1);
+    applyParticleColor();
+  }
+
   function setEnabled(flag) {
     enabled = Boolean(flag);
-    mesh.visible = enabled;
+    wrapper.visible = enabled;
   }
 
   function getActiveCount() {
     return enabled ? MODE_CONFIGS[currentSeason].count : 0;
   }
 
-  function update(dt, timeSec = 0) {
-    mesh.visible = enabled;
+  function getFireflyCount() {
+    return enabled && currentSeason === 'summer' && fireflyWeight > 0.02 ? MAX_FIREFLIES : 0;
+  }
+
+  function update(dt, timeSec = 0, cameraQuat = null) {
+    wrapper.visible = enabled;
     if (!enabled) return;
 
     const cfg = MODE_CONFIGS[currentSeason];
@@ -274,16 +350,43 @@ export function createSeasonalParticles({ initialSeason = 'summer', initiallyEna
     }
 
     mesh.instanceMatrix.needsUpdate = true;
+
+    const showFireflies = currentSeason === 'summer' && fireflyWeight > 0.02;
+    fireflyMesh.visible = showFireflies;
+    if (showFireflies) {
+      fireflyMat.opacity = fireflyWeight * 0.92;
+      for (let i = 0; i < MAX_FIREFLIES; i++) {
+        const f = fireflies[i];
+        const t = timeSec * f.speed + f.phase;
+        dummy.position.set(
+          f.bx + Math.sin(t) * f.radius,
+          f.by + Math.sin(t * 1.4 + 0.6) * 0.28,
+          f.bz + Math.cos(t * 0.85) * f.radius
+        );
+        if (cameraQuat) {
+          dummy.quaternion.copy(cameraQuat);
+        } else {
+          dummy.rotation.set(0, 0, 0);
+        }
+        const blink = 0.25 + 0.75 * Math.pow(0.5 + 0.5 * Math.sin(timeSec * f.blinkSpeed + f.phase), 2);
+        dummy.scale.setScalar(f.size * blink * fireflyWeight);
+        dummy.updateMatrix();
+        fireflyMesh.setMatrixAt(i, dummy.matrix);
+      }
+      fireflyMesh.instanceMatrix.needsUpdate = true;
+    }
   }
 
   setSeason(initialSeason);
   setEnabled(initiallyEnabled);
 
   return {
-    mesh,
+    mesh: wrapper,
     setSeason,
     setEnabled,
+    setAtmosphere,
     update,
     getActiveCount,
+    getFireflyCount,
   };
 }

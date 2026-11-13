@@ -15,10 +15,11 @@
         <div class="brand-title-row">
           <h1>四季林间服装店</h1>
           <span id="season-badge" class="season-badge">SUMMER · 盛夏</span>
+          <span id="time-badge" class="season-badge time-badge">DAY · 晴昼</span>
         </div>
       </header>
 
-      <aside class="hud-panel" aria-label="四季与视角控制">
+      <aside class="hud-panel" aria-label="四季、光影与视角控制">
         <div class="hud-row hud-row--primary">
           <div class="hud-section">
             <span class="hud-label">季节</span>
@@ -38,7 +39,25 @@
             </div>
           </div>
 
+          <div class="hud-section hud-section--time">
+            <span class="hud-label">光影</span>
+            <div class="hud-group hud-group--times" role="group" aria-label="昼夜光影切换">
+              <button type="button" class="pill-btn time-btn is-active" data-time="day">
+                <i class="time-dot" style="--dot: #f2c15a" aria-hidden="true"></i>晴昼
+              </button>
+              <button type="button" class="pill-btn time-btn" data-time="golden">
+                <i class="time-dot" style="--dot: #e28452" aria-hidden="true"></i>暮色
+              </button>
+              <button type="button" class="pill-btn time-btn" data-time="night">
+                <i class="time-dot" style="--dot: #86a7eb" aria-hidden="true"></i>月夜
+              </button>
+            </div>
+          </div>
+
           <div class="hud-actions" role="group" aria-label="氛围与动画控制">
+            <button type="button" id="toggle-cycle" class="ghost-btn" aria-pressed="false">
+              流转: 关
+            </button>
             <button type="button" id="toggle-particles" class="ghost-btn is-on" aria-pressed="true">
               飘落: 开
             </button>
@@ -61,7 +80,7 @@
 
         <div class="hud-row hud-row--compact">
           <span class="hud-hint">
-            拖拽旋转 · 滚轮缩放 · 右键平移 · 1-6 视角 · Q/W/E/A 四季 · P 飘落 · R 复位
+            拖拽旋转 · 滚轮缩放 · 右键平移 · 1-6 视角 · Q/W/E/A 四季 · 7/8/9 时段 · L 流转 · P 飘落 · R 复位
           </span>
         </div>
       </aside>

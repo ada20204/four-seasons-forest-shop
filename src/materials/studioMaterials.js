@@ -11,6 +11,11 @@ export const sharedUniforms = {
   uHaloColor: { value: new THREE.Color('#fffaf2') },
   uHaloStrength: { value: 0.42 },
   uHaloCenter: { value: new THREE.Vector2(0.50, 0.50) },
+  uMoonMix: { value: 0.0 },
+  uMoonPos: { value: new THREE.Vector2(0.79, 0.81) },
+  uSunOrbMix: { value: 0.24 },
+  uSunPos: { value: new THREE.Vector2(0.76, 0.84) },
+  uStarStrength: { value: 0.0 },
 };
 
 function makeCanvas(w, h) {
@@ -722,7 +727,8 @@ export function createClearStorefrontGlassMaterial() {
 }
 
 /**
- * Studio seamless cyclorama gradient backdrop + subtle radial glow halo behind diorama.
+ * Studio seamless cyclorama gradient backdrop + subtle radial diorama halo,
+ * golden-hour solar scatter, sparse night starfield, and silver-pearl full moon.
  */
 export function createStudioBackdropMesh() {
   const geo = new THREE.PlaneGeometry(2, 2);
@@ -730,12 +736,18 @@ export function createStudioBackdropMesh() {
     depthTest: false,
     depthWrite: false,
     uniforms: {
+      uTime: sharedUniforms.uTime,
       uTop: sharedUniforms.uBackdropTop,
       uMid: sharedUniforms.uBackdropMid,
       uBottom: sharedUniforms.uBackdropBottom,
       uHaloColor: sharedUniforms.uHaloColor,
       uHaloStrength: sharedUniforms.uHaloStrength,
       uHaloCenter: sharedUniforms.uHaloCenter,
+      uMoonMix: sharedUniforms.uMoonMix,
+      uMoonPos: sharedUniforms.uMoonPos,
+      uSunOrbMix: sharedUniforms.uSunOrbMix,
+      uSunPos: sharedUniforms.uSunPos,
+      uStarStrength: sharedUniforms.uStarStrength,
       uAspect: { value: 1.5 },
     },
     vertexShader: /* glsl */ `
@@ -746,14 +758,50 @@ export function createStudioBackdropMesh() {
       }
     `,
     fragmentShader: /* glsl */ `
+      uniform float uTime;
       uniform vec3 uTop;
       uniform vec3 uMid;
       uniform vec3 uBottom;
       uniform vec3 uHaloColor;
       uniform float uHaloStrength;
       uniform vec2 uHaloCenter;
+      uniform float uMoonMix;
+      uniform vec2 uMoonPos;
+      uniform float uSunOrbMix;
+      uniform vec2 uSunPos;
+      uniform float uStarStrength;
       uniform float uAspect;
       varying vec2 vUv;
+
+      float hash21(vec2 p) {
+        p = fract(p * vec2(234.34, 435.345));
+        p += dot(p, p + 34.23);
+        return fract(p.x * p.y);
+      }
+
+      float noise2(vec2 p) {
+        vec2 i = floor(p);
+        vec2 f = fract(p);
+        f = f * f * (3.0 - 2.0 * f);
+        float a = hash21(i);
+        float b = hash21(i + vec2(1.0, 0.0));
+        float c = hash21(i + vec2(0.0, 1.0));
+        float d = hash21(i + vec2(1.0, 1.0));
+        return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
+      }
+
+      float starLayer(vec2 uv, float scale, float density, float aspect) {
+        vec2 grid = vec2(scale * aspect, scale);
+        vec2 st = uv * grid;
+        vec2 id = floor(st);
+        vec2 gv = fract(st) - 0.5;
+        float rnd = hash21(id);
+        if (rnd > density) return 0.0;
+        vec2 offset = vec2(hash21(id + 13.7), hash21(id + 71.3)) - 0.5;
+        float d = length(gv - offset * 0.65);
+        float sparkle = 0.65 + 0.35 * sin(uTime * (1.2 + rnd * 2.4) + rnd * 62.8);
+        return smoothstep(0.095, 0.012, d) * sparkle * (0.45 + 0.55 * hash21(id + 5.1));
+      }
 
       void main() {
         float y = clamp( vUv.y, 0.0, 1.0 );
@@ -765,6 +813,53 @@ export function createStudioBackdropMesh() {
         float dist = length( p );
         float glow = ( 1.0 - smoothstep( 0.06, 0.62, dist ) ) * uHaloStrength;
         vec3 col = mix( bg, uHaloColor, glow * 0.72 );
+
+        // Warm golden-hour solar scatter & horizon sunset wash along low sun vector
+        if ( uSunOrbMix > 0.005 ) {
+          vec2 sp = vUv - uSunPos;
+          sp.x *= uAspect;
+          float sd = length( sp );
+          float orbGlow = exp( -sd * 2.4 ) * 0.42 + exp( -sd * 8.0 ) * 0.22;
+          float horizonBand = exp( -abs( y - 0.38 ) * 6.2 ) * smoothstep( 0.35, 1.05, uSunOrbMix ) * 0.28;
+          vec3 sunTint = mix( vec3( 1.85, 1.52, 1.15 ), vec3( 2.35, 1.25, 0.58 ), clamp( uSunOrbMix, 0.0, 1.0 ) );
+          col += sunTint * orbGlow * uSunOrbMix + vec3( 1.92, 0.90, 0.44 ) * horizonBand;
+        }
+
+        // Aspect-stable full moon anchor (tucked cleanly in upper-right breathing sky)
+        vec2 moonPos = vec2(
+          mix( 0.75, uMoonPos.x, smoothstep( 0.55, 1.25, uAspect ) ),
+          mix( 0.85, uMoonPos.y, smoothstep( 0.55, 1.25, uAspect ) )
+        );
+        vec2 mp = vUv - moonPos;
+        mp.x *= uAspect;
+        float md = length( mp );
+        float rMoon = uAspect < 0.85 ? 0.036 : 0.044;
+
+        // Subtle serene starfield in upper sky, masked clear of moon corona
+        if ( uStarStrength > 0.005 ) {
+          float skyMask = smoothstep( 0.32, 0.68, y ) * smoothstep( rMoon * 1.35, rMoon * 4.5, md );
+          float s1 = starLayer( vUv, 42.0, 0.042, uAspect );
+          float s2 = starLayer( vUv + vec2( 0.37, 0.19 ), 74.0, 0.032, uAspect );
+          vec3 starCol = vec3( 0.86, 0.92, 1.15 );
+          col += starCol * ( s1 * 0.58 + s2 * 0.38 ) * skyMask * uStarStrength;
+        }
+
+        // Luminous pearl-silver Full Moon + atmospheric lunar corona
+        if ( uMoonMix > 0.005 ) {
+          float corona = exp( -md * 4.4 ) * 0.15 + exp( -md * 15.5 ) * 0.44;
+          col += vec3( 0.34, 0.49, 0.84 ) * corona * uMoonMix;
+
+          float disc = 1.0 - smoothstep( rMoon * 0.94, rMoon * 1.03, md );
+          if ( disc > 0.001 ) {
+            vec2 localMoon = mp / rMoon;
+            float zLimb = sqrt( max( 0.02, 1.0 - dot( localMoon, localMoon ) ) );
+            float maria = noise2( localMoon * 3.1 + vec2( 2.4, 1.7 ) ) * 0.65
+                        + noise2( localMoon * 6.8 - vec2( 1.2, 3.1 ) ) * 0.35;
+            vec3 moonSurf = mix( vec3( 1.24, 1.34, 1.56 ), vec3( 1.78, 1.88, 2.08 ), smoothstep( 0.25, 0.80, maria ) );
+            moonSurf *= 0.72 + 0.34 * zLimb;
+            col = mix( col, moonSurf, disc * uMoonMix );
+          }
+        }
 
         gl_FragColor = vec4( col, 1.0 );
       }
