@@ -210,16 +210,15 @@ function createMultiLobeCanopyPillowGeometry() {
       rz: l.rz,
       seed: l.seed,
       skirt: l.skirt,
-      detail: 11,
+      detail: 15,
       lobeStrength: 0.14,
     });
     g.translate(l.offset[0], l.offset[1], l.offset[2]);
     return g;
   });
 
-  const merged = mergeSimpleGeometries(geos);
-  merged.computeVertexNormals();
-  return merged;
+  // Preserve indexed smooth normals copied during mergeSimpleGeometries (do NOT recompute on non-indexed buffer)
+  return mergeSimpleGeometries(geos);
 }
 
 /**
@@ -434,16 +433,18 @@ export function createWinterSnow({ island, botanical, patio }) {
 
   const { map: snowMap, bumpMap: snowBump } = createSnowTextures();
   const snowMat = new THREE.MeshPhysicalMaterial({
-    color: new THREE.Color('#f5f8fd'),
+    color: new THREE.Color('#f6f9fe'),
+    emissive: new THREE.Color('#dbe6f4'),
+    emissiveIntensity: 0.045,
     map: snowMap,
     bumpMap: snowBump,
-    bumpScale: 0.024,
-    roughness: 0.78,
+    bumpScale: 0.022,
+    roughness: 0.76,
     metalness: 0.0,
-    sheen: 0.36,
-    sheenRoughness: 0.84,
+    sheen: 0.38,
+    sheenRoughness: 0.82,
     sheenColor: new THREE.Color('#ffffff'),
-    envMapIntensity: 0.45,
+    envMapIntensity: 0.48,
   });
 
   const groundCarrier = new THREE.Group();
@@ -471,11 +472,11 @@ export function createWinterSnow({ island, botanical, patio }) {
   const mainRoofGeo = createPillowedSlabGeometry({
     width: 4.86,
     depth: 5.04,
-    thickness: 0.36,
-    overhang: 0.11,
-    droop: 0.15,
-    nx: 26,
-    nz: 26,
+    thickness: 0.39,
+    overhang: 0.13,
+    droop: 0.21,
+    nx: 32,
+    nz: 32,
     seed: 101,
   });
   const mainRoofSnow = new THREE.Mesh(mainRoofGeo, snowMat);
@@ -485,11 +486,11 @@ export function createWinterSnow({ island, botanical, patio }) {
   const leftRoofGeo = createPillowedSlabGeometry({
     width: 2.96,
     depth: 3.64,
-    thickness: 0.32,
-    overhang: 0.10,
-    droop: 0.14,
-    nx: 18,
-    nz: 20,
+    thickness: 0.35,
+    overhang: 0.12,
+    droop: 0.19,
+    nx: 24,
+    nz: 24,
     seed: 102,
   });
   const leftRoofSnow = new THREE.Mesh(leftRoofGeo, snowMat);
@@ -498,12 +499,12 @@ export function createWinterSnow({ island, botanical, patio }) {
 
   const planterSnowGeo = createPillowedSlabGeometry({
     width: 3.92,
-    depth: 0.35,
-    thickness: 0.24,
-    overhang: 0.06,
-    droop: 0.09,
-    nx: 24,
-    nz: 8,
+    depth: 0.36,
+    thickness: 0.26,
+    overhang: 0.07,
+    droop: 0.11,
+    nx: 28,
+    nz: 10,
     seed: 103,
   });
   const planterSnow = new THREE.Mesh(planterSnowGeo, snowMat);
@@ -516,11 +517,11 @@ export function createWinterSnow({ island, botanical, patio }) {
   const canopyLeftWingGeo = createPillowedSlabGeometry({
     width: 1.06,
     depth: 5.00,
-    thickness: 0.30,
-    overhang: 0.09,
-    droop: 0.13,
-    nx: 10,
-    nz: 24,
+    thickness: 0.32,
+    overhang: 0.11,
+    droop: 0.17,
+    nx: 12,
+    nz: 28,
     seed: 104,
   });
   const canopyLeftWing = new THREE.Mesh(canopyLeftWingGeo, snowMat);
@@ -530,11 +531,11 @@ export function createWinterSnow({ island, botanical, patio }) {
   const canopyFrontLeftGeo = createPillowedSlabGeometry({
     width: 2.98,
     depth: 1.26,
-    thickness: 0.31,
-    overhang: 0.09,
-    droop: 0.14,
-    nx: 18,
-    nz: 10,
+    thickness: 0.33,
+    overhang: 0.11,
+    droop: 0.18,
+    nx: 22,
+    nz: 12,
     seed: 105,
   });
   const canopyFrontLeft = new THREE.Mesh(canopyFrontLeftGeo, snowMat);
@@ -567,64 +568,114 @@ export function createWinterSnow({ island, botanical, patio }) {
   groundBlanket.position.y = 0;
   groundCarrier.add(registerPuff(groundBlanket, 0.99));
 
+  // Entrance steps, boulders, bollards, shrubs, ferns & hostas consolidated into ONE InstancedMesh
+  const groundMoundGeo = createSnowCloudMoundGeometry({ rx: 1.0, ry: 0.44, rz: 1.0, skirt: 0.11, detail: 16, seed: 309, lobeStrength: 0.20 });
+  const groundMoundData = [];
+  const gmDummy = new THREE.Object3D();
+
   // Entrance step side pillows (leaving warm beige center walking tread clear!)
-  const stepPuffGeo = createSnowCloudMoundGeometry({ rx: 0.27, ry: 0.14, rz: 0.22, skirt: 0.03, detail: 10, seed: 207 });
   island.stepSpecs.forEach((st, idx) => {
     [-1, 1].forEach((side) => {
-      const sp = new THREE.Mesh(stepPuffGeo, snowMat);
-      sp.position.set(st.x + side * (st.w * 0.40), st.y + st.h * 0.45, st.z);
-      sp.rotation.y = (idx * 0.7 + side) * 1.1;
-      sp.scale.set(0.92 + (idx % 2) * 0.16, 0.92 + (side > 0 ? 0.10 : 0), 0.92);
-      groundCarrier.add(registerPuff(sp, 0.65));
+      groundMoundData.push({
+        x: st.x + side * (st.w * 0.40),
+        y: st.y + st.h * 0.45,
+        z: st.z,
+        rotX: 0,
+        rotY: (idx * 0.7 + side) * 1.1,
+        rotZ: 0,
+        rx: 0.27 * (0.92 + (idx % 2) * 0.16),
+        ry: (0.14 / 0.44) * (0.92 + (side > 0 ? 0.10 : 0)),
+        rz: 0.22 * 0.92,
+      });
     });
   });
 
   // Perimeter boulder snow caps
-  const boulderCapGeo = createSnowCloudMoundGeometry({ rx: 1.0, ry: 0.44, rz: 1.0, skirt: 0.11, detail: 13, seed: 309, lobeStrength: 0.18 });
   island.boulderSpecs.forEach((b) => {
-    const cap = new THREE.Mesh(boulderCapGeo, snowMat);
-    cap.position.set(b.pos[0], b.pos[1] + b.r * 0.32, b.pos[2]);
-    cap.rotation.y = b.rotY;
-    cap.scale.set(b.r * 0.94, b.r * 0.80, b.r * 0.92);
-    groundCarrier.add(registerPuff(cap, 0.65));
+    groundMoundData.push({
+      x: b.pos[0],
+      y: b.pos[1] + b.r * 0.32,
+      z: b.pos[2],
+      rotX: 0,
+      rotY: b.rotY,
+      rotZ: 0,
+      rx: b.r * 0.94,
+      ry: b.r * 0.82,
+      rz: b.r * 0.92,
+    });
   });
 
-  // Bollard lantern mushroom snow hats (top cap sits at by + 0.52)
-  const bollardHatGeo = createSnowCloudMoundGeometry({ rx: 0.135, ry: 0.088, rz: 0.135, skirt: 0.025, detail: 10, seed: 411 });
+  // Bollard lantern mushroom snow hats
   island.bollardCoords.forEach(([bx, by, bz], i) => {
-    const hat = new THREE.Mesh(bollardHatGeo, snowMat);
-    hat.position.set(bx, by + 0.52, bz);
-    hat.rotation.y = i * 1.2;
-    groundCarrier.add(registerPuff(hat, 0.65));
+    groundMoundData.push({
+      x: bx,
+      y: by + 0.52,
+      z: bz,
+      rotX: 0,
+      rotY: i * 1.2,
+      rotZ: 0,
+      rx: 0.135,
+      ry: 0.088 / 0.44,
+      rz: 0.135,
+    });
   });
 
   // Irregular multi-lobe tufted shrub, fern & hosta snow caps (tips & lavender peek cleanly!)
-  const shrubCapGeo = createSnowCloudMoundGeometry({ rx: 0.46, ry: 0.22, rz: 0.46, skirt: 0.06, detail: 12, seed: 513, lobeStrength: 0.24 });
   botanical.shrubSpecs.forEach((s, i) => {
-    const cap = new THREE.Mesh(shrubCapGeo, snowMat);
     const crownY = 0.21 + s.h * (s.spikes ? 0.44 : 0.58);
-    cap.position.set(s.x, crownY, s.z);
-    cap.rotation.set(((i % 3) - 1) * 0.10, i * 0.92, ((i % 2) - 0.5) * 0.12);
-    cap.scale.set(s.w * (s.spikes ? 0.64 : 0.90), 0.78 + (i % 3) * 0.14, s.w * (s.spikes ? 0.64 : 0.86));
-    groundCarrier.add(registerPuff(cap, 0.60));
+    groundMoundData.push({
+      x: s.x,
+      y: crownY,
+      z: s.z,
+      rotX: ((i % 3) - 1) * 0.10,
+      rotY: i * 0.92,
+      rotZ: ((i % 2) - 0.5) * 0.12,
+      rx: 0.46 * s.w * (s.spikes ? 0.64 : 0.90),
+      ry: (0.22 / 0.44) * (0.78 + (i % 3) * 0.14),
+      rz: 0.46 * s.w * (s.spikes ? 0.64 : 0.86),
+    });
   });
 
-  const fernCapGeo = createSnowCloudMoundGeometry({ rx: 0.34, ry: 0.14, rz: 0.34, skirt: 0.04, detail: 10, seed: 521, lobeStrength: 0.22 });
   botanical.fernCoords.forEach(([fx, fy, fz, sc], i) => {
-    const cap = new THREE.Mesh(fernCapGeo, snowMat);
-    cap.position.set(fx, fy + 0.30 * sc, fz);
-    cap.rotation.y = i * 1.05;
-    cap.scale.setScalar(sc * 0.86);
-    groundCarrier.add(registerPuff(cap, 0.60));
+    groundMoundData.push({
+      x: fx,
+      y: fy + 0.30 * sc,
+      z: fz,
+      rotX: 0,
+      rotY: i * 1.05,
+      rotZ: 0,
+      rx: 0.34 * sc * 0.86,
+      ry: (0.14 / 0.44) * sc * 0.86,
+      rz: 0.34 * sc * 0.86,
+    });
   });
 
   botanical.hostaItems.forEach((hi, i) => {
-    const cap = new THREE.Mesh(fernCapGeo, snowMat);
-    cap.position.set(hi.pos[0], hi.pos[1] + 0.24 * hi.scale, hi.pos[2]);
-    cap.rotation.y = i * 1.4;
-    cap.scale.set(hi.scale * 1.02, hi.scale * 0.78, hi.scale * 0.98);
-    groundCarrier.add(registerPuff(cap, 0.60));
+    groundMoundData.push({
+      x: hi.pos[0],
+      y: hi.pos[1] + 0.24 * hi.scale,
+      z: hi.pos[2],
+      rotX: 0,
+      rotY: i * 1.4,
+      rotZ: 0,
+      rx: 0.34 * hi.scale * 1.02,
+      ry: (0.14 / 0.44) * hi.scale * 0.78,
+      rz: 0.34 * hi.scale * 0.98,
+    });
   });
+
+  const groundMoundInst = new THREE.InstancedMesh(groundMoundGeo, snowMat, groundMoundData.length);
+  groundMoundInst.castShadow = true;
+  groundMoundInst.receiveShadow = true;
+  groundMoundData.forEach((d, idx) => {
+    gmDummy.position.set(d.x, d.y, d.z);
+    gmDummy.rotation.set(d.rotX, d.rotY, d.rotZ);
+    gmDummy.scale.set(d.rx, d.ry, d.rz);
+    gmDummy.updateMatrix();
+    groundMoundInst.setMatrixAt(idx, gmDummy.matrix);
+  });
+  groundMoundInst.instanceMatrix.needsUpdate = true;
+  groundCarrier.add(groundMoundInst);
 
   // ==========================================================
   // 4. TREE CROWNS, SPRUCE & CYPRESS TUFTED SNOW CLUMPS, AND PATIO (`treesPatioCarrier`)
@@ -836,6 +887,17 @@ export function createWinterSnow({ island, botanical, patio }) {
       evergreenSnowInst.setMatrixAt(i, dummy.matrix);
     }
     evergreenSnowInst.instanceMatrix.needsUpdate = true;
+
+    const gmXZ = THREE.MathUtils.lerp(0.65, 1.0, easeY);
+    for (let i = 0; i < groundMoundData.length; i++) {
+      const d = groundMoundData[i];
+      gmDummy.position.set(d.x, d.y, d.z);
+      gmDummy.rotation.set(d.rotX, d.rotY, d.rotZ);
+      gmDummy.scale.set(d.rx * gmXZ, d.ry * scaleYFactor, d.rz * gmXZ);
+      gmDummy.updateMatrix();
+      groundMoundInst.setMatrixAt(i, gmDummy.matrix);
+    }
+    groundMoundInst.instanceMatrix.needsUpdate = true;
   }
 
   return {

@@ -49,11 +49,11 @@ export const SEASON_PRESETS = {
     patioFlowerTint: new THREE.Color('#ff88b6'),
     shrubPalette: {
       leaf: '#6ea83f',
-      hydrangea: '#ff8ebb',
-      hydrangeaAlt: '#fff5f8',
-      pinkMound: '#ff7aad',
-      spike: '#eb6ca6',
-      yellow: '#f4e678',
+      hydrangea: '#ff80b2',
+      hydrangeaAlt: '#fff6f9',
+      pinkMound: '#ff70a6',
+      spike: '#ec64a0',
+      yellow: '#f6e878',
     },
   },
 
@@ -129,29 +129,29 @@ export const SEASON_PRESETS = {
     snowWeight: 0.0,
     autumnLitterWeight: 1.0,
     canopyPalettes: [
-      { outer: '#ffe844', mid: '#f29518', deep: '#963c10' }, // Left Hero Golden Maple
-      { outer: '#ffcf3c', mid: '#e47a14', deep: '#88300e' }, // Rear-Right Warm Amber
-      { outer: '#ffec5e', mid: '#f6a820', deep: '#a24a12' }, // Courtyard Honey Birch
-      { outer: '#ffd640', mid: '#ea8416', deep: '#8c340e' }, // Rear Accent
-      { outer: '#ffe04a', mid: '#ee901a', deep: '#923a10' }, // Far-Left Sapling
+      { outer: '#ffec3a', mid: '#f58f0e', deep: '#982e0a' }, // Left Hero Golden Maple
+      { outer: '#ffd234', mid: '#e8760e', deep: '#8c2808' }, // Rear-Right Warm Amber
+      { outer: '#fff058', mid: '#faa618', deep: '#a43e0c' }, // Courtyard Honey Birch
+      { outer: '#ffd93a', mid: '#ee8010', deep: '#902c0a' }, // Rear Accent
+      { outer: '#ffe344', mid: '#f28b12', deep: '#94300a' }, // Far-Left Sapling
     ],
     coniferTint: new THREE.Color('#eef2d4'), // Rear spruces stay rich evergreen!
     cypressTint: new THREE.Color('#f4f2da'), // Cypresses stay evergreen!
-    fernTint: new THREE.Color('#e8b240'),
-    hostaTint: new THREE.Color('#f0c654'),
-    planterLeafTint: new THREE.Color('#db9c28'),
-    planterBloomPrimary: new THREE.Color('#ffe05c'),
-    planterBloomSecondary: new THREE.Color('#f4a630'),
-    vineTint: new THREE.Color('#e8ba3e'),
-    bouquetTint: new THREE.Color('#ffd04c'),
-    patioFlowerTint: new THREE.Color('#f0b634'),
+    fernTint: new THREE.Color('#ebb63c'),
+    hostaTint: new THREE.Color('#f4cb4c'),
+    planterLeafTint: new THREE.Color('#de9d22'),
+    planterBloomPrimary: new THREE.Color('#ffe252'),
+    planterBloomSecondary: new THREE.Color('#f28b22'),
+    vineTint: new THREE.Color('#ecc03a'),
+    bouquetTint: new THREE.Color('#ffd448'),
+    patioFlowerTint: new THREE.Color('#f2b42c'),
     shrubPalette: {
-      leaf: '#c88c28',
-      hydrangea: '#f8e694',
-      hydrangeaAlt: '#e87032',
-      pinkMound: '#de5b2c',
-      spike: '#e8a238',
-      yellow: '#ffcf40',
+      leaf: '#cb8d24',
+      hydrangea: '#fae88e',
+      hydrangeaAlt: '#e45222',
+      pinkMound: '#d83f18',
+      spike: '#ee9f30',
+      yellow: '#ffd238',
     },
   },
 
@@ -169,12 +169,12 @@ export const SEASON_PRESETS = {
     hemiIntensity: 1.00,
     ambientColor: new THREE.Color('#ebf0f8'),
     ambientIntensity: 0.40,
-    backdropTop: new THREE.Color().setRGB(2.34, 2.26, 2.24),
-    backdropMid: new THREE.Color().setRGB(2.24, 2.14, 2.12),
-    backdropBottom: new THREE.Color().setRGB(2.00, 1.88, 1.84),
-    haloColor: new THREE.Color().setRGB(2.94, 2.90, 2.88),
+    backdropTop: new THREE.Color().setRGB(2.42, 2.26, 2.10),
+    backdropMid: new THREE.Color().setRGB(2.34, 2.14, 1.98),
+    backdropBottom: new THREE.Color().setRGB(2.08, 1.84, 1.66),
+    haloColor: new THREE.Color().setRGB(2.98, 2.86, 2.74),
     haloStrength: 0.58,
-    interiorBoost: 1.72, // Rich warm boutique glow contrasting snowy exteriors!
+    interiorBoost: 1.82, // Rich warm boutique glow contrasting snowy exteriors!
     snowWeight: 1.0,
     autumnLitterWeight: 0.0,
     canopyPalettes: [

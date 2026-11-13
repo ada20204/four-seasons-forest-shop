@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { Tree, BarkType, Billboard, LeafType, TreeType } from '@dgreenheck/ez-tree';
+import { mergeTransformedGeometry } from '../core/geometryUtils.js';
 import {
   sharedUniforms,
   createBroadleafSprayTexture,
@@ -468,18 +469,24 @@ function createFernClump(fernTex, scale = 1.0, seed = 301) {
   frondGeo.computeVertexNormals();
 
   const fronds = 12;
+  const dummy = new THREE.Object3D();
+  const matrices = [];
   for (let i = 0; i < fronds; i++) {
     const a = (i / fronds) * Math.PI * 2 + (rng() - 0.5) * 0.24;
     const isInner = i % 3 === 0;
-    const f = new THREE.Mesh(frondGeo, frondMat);
-    f.rotation.y = a;
-    f.rotation.x = isInner ? -0.30 : 0.08 + rng() * 0.14;
+    dummy.position.set(0, 0, 0);
+    dummy.rotation.set(isInner ? -0.30 : 0.08 + rng() * 0.14, a, 0);
     const sc = (isInner ? 0.70 : 0.94 + rng() * 0.22) * scale;
-    f.scale.setScalar(sc);
-    f.castShadow = true;
-    f.receiveShadow = true;
-    g.add(f);
+    dummy.scale.setScalar(sc);
+    dummy.updateMatrix();
+    matrices.push(dummy.matrix.clone());
   }
+  const mergedFronds = new THREE.Mesh(mergeTransformedGeometry(frondGeo, matrices), frondMat);
+  mergedFronds.castShadow = true;
+  mergedFronds.receiveShadow = true;
+  g.add(mergedFronds);
+  frondGeo.dispose();
+
   g.userData.frondMat = frondMat;
   return g;
 }
@@ -524,18 +531,24 @@ function createVariegatedHosta(scale = 1.0) {
   }
   leafGeo.computeVertexNormals();
 
+  const dummy = new THREE.Object3D();
+  const matrices = [];
   for (let ring = 0; ring < 2; ring++) {
     const count = ring === 0 ? 11 : 7;
     for (let i = 0; i < count; i++) {
-      const m = new THREE.Mesh(leafGeo, mat);
-      m.rotation.y = (i / count) * Math.PI * 2 + ring * 0.38;
-      m.rotation.x = ring === 0 ? 0.12 : -0.32;
-      m.scale.setScalar((ring === 0 ? 1.05 : 0.74) * scale);
-      m.castShadow = true;
-      m.receiveShadow = true;
-      g.add(m);
+      dummy.position.set(0, 0, 0);
+      dummy.rotation.set(ring === 0 ? 0.12 : -0.32, (i / count) * Math.PI * 2 + ring * 0.38, 0);
+      dummy.scale.setScalar((ring === 0 ? 1.05 : 0.74) * scale);
+      dummy.updateMatrix();
+      matrices.push(dummy.matrix.clone());
     }
   }
+  const mergedHosta = new THREE.Mesh(mergeTransformedGeometry(leafGeo, matrices), mat);
+  mergedHosta.castShadow = true;
+  mergedHosta.receiveShadow = true;
+  g.add(mergedHosta);
+  leafGeo.dispose();
+
   g.userData.hostaMat = mat;
   return g;
 }
@@ -569,19 +582,25 @@ function createBotanicalFlowerShrub(
     envMapIntensity: 0.28,
   });
 
-  // Layered basal botanical leaf cards radiating outward
+  // Layered basal botanical leaf cards radiating outward (merged to 1 draw call per shrub)
   const leafPlane = new THREE.PlaneGeometry(width * 0.72, width * 0.72);
+  const dummy = new THREE.Object3D();
+  const leafMatrices = [];
   const leafCount = 9;
   for (let i = 0; i < leafCount; i++) {
     const a = (i / leafCount) * Math.PI * 2 + rng() * 0.35;
     const dist = width * (0.12 + rng() * 0.14);
-    const lCard = new THREE.Mesh(leafPlane, leafMat);
-    lCard.position.set(Math.cos(a) * dist, height * (0.28 + rng() * 0.16), Math.sin(a) * dist);
-    lCard.rotation.set(-0.65 + (rng() - 0.5) * 0.35, a + rng() * 0.5, (rng() - 0.5) * 0.4);
-    lCard.castShadow = true;
-    lCard.receiveShadow = true;
-    g.add(lCard);
+    dummy.position.set(Math.cos(a) * dist, height * (0.28 + rng() * 0.16), Math.sin(a) * dist);
+    dummy.rotation.set(-0.65 + (rng() - 0.5) * 0.35, a + rng() * 0.5, (rng() - 0.5) * 0.4);
+    dummy.scale.setScalar(1);
+    dummy.updateMatrix();
+    leafMatrices.push(dummy.matrix.clone());
   }
+  const mergedLeaves = new THREE.Mesh(mergeTransformedGeometry(leafPlane, leafMatrices), leafMat);
+  mergedLeaves.castShadow = true;
+  mergedLeaves.receiveShadow = true;
+  g.add(mergedLeaves);
+  leafPlane.dispose();
 
   if (spikes) {
     // Tall crossed botanical raceme spikes (purple lavender / salvia)
@@ -593,6 +612,7 @@ function createBotanicalFlowerShrub(
       roughness: 0.72,
     });
     const spikeGeo = new THREE.PlaneGeometry(0.24, height * 0.92);
+    const spikeMatrices = [];
     const sCount = 12;
     for (let i = 0; i < sCount; i++) {
       const a = rng() * Math.PI * 2;
@@ -605,14 +625,18 @@ function createBotanicalFlowerShrub(
       const sc = 0.78 + rng() * 0.38;
 
       for (let cross = 0; cross < 2; cross++) {
-        const sp = new THREE.Mesh(spikeGeo, bloomMat);
-        sp.position.set(sx, sy, sz);
-        sp.rotation.set(tiltX, a + cross * (Math.PI * 0.5), tiltZ);
-        sp.scale.setScalar(sc);
-        sp.castShadow = true;
-        g.add(sp);
+        dummy.position.set(sx, sy, sz);
+        dummy.rotation.set(tiltX, a + cross * (Math.PI * 0.5), tiltZ);
+        dummy.scale.setScalar(sc);
+        dummy.updateMatrix();
+        spikeMatrices.push(dummy.matrix.clone());
       }
     }
+    const mergedSpikes = new THREE.Mesh(mergeTransformedGeometry(spikeGeo, spikeMatrices), bloomMat);
+    mergedSpikes.castShadow = true;
+    g.add(mergedSpikes);
+    spikeGeo.dispose();
+
     g.userData.leafMat = leafMat;
     g.userData.bloomMat = bloomMat;
   } else {
@@ -625,6 +649,7 @@ function createBotanicalFlowerShrub(
       roughness: 0.74,
     });
     const flPlane = new THREE.PlaneGeometry(0.36 * width, 0.36 * width);
+    const bloomMatrices = [];
     const clusterCount = 10;
     for (let i = 0; i < clusterCount; i++) {
       const a = (i / clusterCount) * Math.PI * 2 + rng() * 0.4;
@@ -633,15 +658,19 @@ function createBotanicalFlowerShrub(
       const cz = Math.sin(a) * dist;
       const cy = height * (0.48 + (i < 2 ? 0.22 : rng() * 0.16));
 
-      // Three intersecting angled floret cards per umbel = 3D volumetric bloom spray from every orbit angle!
       for (let p = 0; p < 3; p++) {
-        const card = new THREE.Mesh(flPlane, bloomMat);
-        card.position.set(cx, cy, cz);
-        card.rotation.set((p - 1) * 0.48, a + p * (Math.PI / 3), (rng() - 0.5) * 0.3);
-        card.castShadow = true;
-        g.add(card);
+        dummy.position.set(cx, cy, cz);
+        dummy.rotation.set((p - 1) * 0.48, a + p * (Math.PI / 3), (rng() - 0.5) * 0.3);
+        dummy.scale.setScalar(1);
+        dummy.updateMatrix();
+        bloomMatrices.push(dummy.matrix.clone());
       }
     }
+    const mergedBlooms = new THREE.Mesh(mergeTransformedGeometry(flPlane, bloomMatrices), bloomMat);
+    mergedBlooms.castShadow = true;
+    g.add(mergedBlooms);
+    flPlane.dispose();
+
     g.userData.leafMat = leafMat;
     g.userData.bloomMat = bloomMat;
   }
@@ -1162,22 +1191,33 @@ export function createBotanicalGarden({ outlineCurve = null } = {}) {
   const planterBloomGeo = new THREE.PlaneGeometry(0.36, 0.36);
   const vineGeo = new THREE.PlaneGeometry(0.26, 0.46);
 
+  const planterDummy = new THREE.Object3D();
+  const pLeafMatrices = [];
+  const pPrimaryMatrices = [];
+  const pSecondaryMatrices = [];
+  const pVineMatrices = [];
+
   for (let i = 0; i < 24; i++) {
     const x = THREE.MathUtils.lerp(-0.18, 3.54, i / 23) + (rng() - 0.5) * 0.05;
 
     for (let c = 0; c < 2; c++) {
-      const lm = new THREE.Mesh(planterLeafGeo, planterLeafMat);
-      lm.position.set(x, 3.88 + rng() * 0.06, 1.24 + (rng() - 0.5) * 0.06);
-      lm.rotation.set(-0.35 + rng() * 0.65, c * Math.PI * 0.5 + rng() * 0.45, (rng() - 0.5) * 0.35);
-      planterFloraGroup.add(lm);
+      planterDummy.position.set(x, 3.88 + rng() * 0.06, 1.24 + (rng() - 0.5) * 0.06);
+      planterDummy.rotation.set(-0.35 + rng() * 0.65, c * Math.PI * 0.5 + rng() * 0.45, (rng() - 0.5) * 0.35);
+      planterDummy.scale.setScalar(1);
+      planterDummy.updateMatrix();
+      pLeafMatrices.push(planterDummy.matrix.clone());
     }
 
     for (let b = 0; b < 2; b++) {
-      const mat = (i + b) % 2 === 0 ? planterBloomPrimaryMat : planterBloomSecondaryMat;
-      const bm = new THREE.Mesh(planterBloomGeo, mat);
-      bm.position.set(x + (rng() - 0.5) * 0.06, 3.94 + rng() * 0.09, 1.32 + rng() * 0.05);
-      bm.rotation.set(0.18 + rng() * 0.48, b * 1.25 + rng() * 0.45, (rng() - 0.5) * 0.42);
-      planterFloraGroup.add(bm);
+      planterDummy.position.set(x + (rng() - 0.5) * 0.06, 3.94 + rng() * 0.09, 1.32 + rng() * 0.05);
+      planterDummy.rotation.set(0.18 + rng() * 0.48, b * 1.25 + rng() * 0.45, (rng() - 0.5) * 0.42);
+      planterDummy.scale.setScalar(1);
+      planterDummy.updateMatrix();
+      if ((i + b) % 2 === 0) {
+        pPrimaryMatrices.push(planterDummy.matrix.clone());
+      } else {
+        pSecondaryMatrices.push(planterDummy.matrix.clone());
+      }
     }
   }
 
@@ -1190,19 +1230,27 @@ export function createBotanicalGarden({ outlineCurve = null } = {}) {
       const dropScaleY = (0.58 + rng() * 0.72) * (k === Math.floor(tendrils / 2) ? 1.22 : 0.82);
       const leanZ = (k - (tendrils - 1) * 0.5) * 0.24 + (rng() - 0.5) * 0.14;
 
-      const vm = new THREE.Mesh(vineGeo, vineMat);
-      vm.position.set(cx + offset, 3.70 - dropScaleY * 0.16, 1.445 + rng() * 0.03);
-      vm.rotation.set(0.18 + rng() * 0.14, (rng() - 0.5) * 0.55, leanZ);
-      vm.scale.set(0.95 + rng() * 0.35, dropScaleY, 1.0);
-      planterFloraGroup.add(vm);
+      planterDummy.position.set(cx + offset, 3.70 - dropScaleY * 0.16, 1.445 + rng() * 0.03);
+      planterDummy.rotation.set(0.18 + rng() * 0.14, (rng() - 0.5) * 0.55, leanZ);
+      planterDummy.scale.set(0.95 + rng() * 0.35, dropScaleY, 1.0);
+      planterDummy.updateMatrix();
+      pVineMatrices.push(planterDummy.matrix.clone());
 
-      const vmCross = new THREE.Mesh(vineGeo, vineMat);
-      vmCross.position.copy(vm.position);
-      vmCross.rotation.set(0.20, 0.95 + rng() * 0.4, leanZ * 0.85);
-      vmCross.scale.copy(vm.scale);
-      planterFloraGroup.add(vmCross);
+      planterDummy.rotation.set(0.20, 0.95 + rng() * 0.4, leanZ * 0.85);
+      planterDummy.updateMatrix();
+      pVineMatrices.push(planterDummy.matrix.clone());
     }
   });
+
+  planterFloraGroup.add(
+    new THREE.Mesh(mergeTransformedGeometry(planterLeafGeo, pLeafMatrices), planterLeafMat),
+    new THREE.Mesh(mergeTransformedGeometry(planterBloomGeo, pPrimaryMatrices), planterBloomPrimaryMat),
+    new THREE.Mesh(mergeTransformedGeometry(planterBloomGeo, pSecondaryMatrices), planterBloomSecondaryMat),
+    new THREE.Mesh(mergeTransformedGeometry(vineGeo, pVineMatrices), vineMat)
+  );
+  planterLeafGeo.dispose();
+  planterBloomGeo.dispose();
+  vineGeo.dispose();
 
   // ==========================================================
   // 6. AUTUMN CRISP FALLEN LEAF LITTER (`autumnLitterWeight`)
