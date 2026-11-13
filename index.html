@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="data:," />
+    <title>四季林间服装店 · Four Seasons Forest Boutique</title>
+  </head>
+  <body>
+    <main class="stage-shell">
+      <div id="stage" class="stage" aria-label="四季林间服装店 3D 微缩景观"></div>
+
+      <header class="brand-badge">
+        <span class="brand-kicker">ATELIER IN THE WOODS</span>
+        <h1>四季林间服装店</h1>
+      </header>
+
+      <aside class="hud-panel" aria-label="视角与景观控制">
+        <div class="hud-row">
+          <span class="hud-label">视角</span>
+          <div class="hud-group" role="group" aria-label="相机视角">
+            <button type="button" class="pill-btn is-active" data-view="overview">默认三分之四</button>
+            <button type="button" class="pill-btn" data-view="leftFront">左前方</button>
+            <button type="button" class="pill-btn" data-view="rightFront">右前方</button>
+            <button type="button" class="pill-btn" data-view="highSide">高位侧面</button>
+            <button type="button" class="pill-btn" data-view="rear">背面</button>
+            <button type="button" class="pill-btn" data-view="interior">橱窗近景</button>
+          </div>
+        </div>
+        <div class="hud-row hud-row--compact">
+          <span class="hud-hint">左键拖拽旋转 · 滚轮缩放 · 右键平移 · 快捷键 1-6 / R 复位</span>
+          <button type="button" id="reset-view" class="ghost-btn">复位视角</button>
+        </div>
+      </aside>
+    </main>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

@@ -1,0 +1,178 @@
+@import '@fontsource/cormorant-garamond/500.css';
+@import '@fontsource/cormorant-garamond/600.css';
+@import '@fontsource/inter/400.css';
+@import '@fontsource/inter/500.css';
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #f9efe2;
+  color: #2f2924;
+  font-family: 'Inter', 'PingFang SC', 'Microsoft YaHei', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.stage-shell {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.stage {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.stage canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+  outline: none;
+}
+
+.brand-badge {
+  position: absolute;
+  top: 20px;
+  left: 24px;
+  z-index: 10;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.brand-kicker {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(65, 52, 42, 0.62);
+}
+
+.brand-badge h1 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: rgba(45, 36, 30, 0.88);
+}
+
+.hud-panel {
+  position: absolute;
+  left: 50%;
+  bottom: 14px;
+  transform: translateX(-50%);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 13px;
+  border-radius: 13px;
+  background: rgba(255, 251, 245, 0.82);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(110, 88, 66, 0.14);
+  box-shadow: 0 8px 24px rgba(64, 48, 34, 0.09);
+  max-width: calc(100vw - 24px);
+}
+
+.hud-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.hud-row--compact {
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.hud-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(65, 52, 42, 0.66);
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+
+.hud-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.pill-btn,
+.ghost-btn {
+  appearance: none;
+  border: 1px solid rgba(80, 62, 46, 0.14);
+  background: rgba(255, 255, 255, 0.65);
+  color: #3a3028;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 5px 11px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease, transform 0.12s ease;
+  white-space: nowrap;
+}
+
+.pill-btn:hover,
+.ghost-btn:hover {
+  background: rgba(255, 255, 255, 0.96);
+  border-color: rgba(80, 62, 46, 0.28);
+}
+
+.pill-btn.is-active {
+  background: #3d332c;
+  color: #fcf7ef;
+  border-color: #3d332c;
+}
+
+.hud-hint {
+  font-size: 11px;
+  color: rgba(65, 52, 42, 0.58);
+}
+
+@media (max-width: 720px) {
+  .brand-badge {
+    top: 12px;
+    left: 14px;
+  }
+
+  .brand-badge h1 {
+    font-size: 15px;
+  }
+
+  .hud-panel {
+    bottom: 12px;
+    padding: 8px 10px;
+    gap: 6px;
+  }
+
+  .hud-hint {
+    display: none;
+  }
+
+  .pill-btn,
+  .ghost-btn {
+    font-size: 11px;
+    padding: 4px 9px;
+  }
+}
