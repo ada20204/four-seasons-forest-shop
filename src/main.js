@@ -12,10 +12,7 @@ import {
   SMAAEffect,
 } from 'postprocessing';
 import { N8AOPostPass } from 'n8ao';
-import {
-  sharedUniforms,
-  createStudioBackdropMesh,
-} from './materials/studioMaterials.js';
+import { sharedUniforms, createStudioBackdropMesh } from './materials/studioMaterials.js';
 import { LIGHTING_BASELINE, CAMERA_VIEWS } from './scene/lightingConfig.js';
 import { createIslandBase } from './scene/createIslandBase.js';
 import { createBoutiqueBuilding } from './scene/createBoutiqueBuilding.js';
@@ -24,12 +21,7 @@ import { createBotanicalGarden } from './scene/createBotanicalGarden.js';
 import { createWinterSnow } from './scene/createWinterSnow.js';
 import { createSeasonalParticles } from './scene/createSeasonalParticles.js';
 import { SEASON_ORDER, SEASON_PRESETS } from './scene/seasonPresets.js';
-import {
-  TIME_ORDER,
-  TIME_PROGRESS,
-  TIME_PRESETS,
-  sampleTimeState,
-} from './scene/timePresets.js';
+import { TIME_ORDER, TIME_PROGRESS, TIME_PRESETS, sampleTimeState } from './scene/timePresets.js';
 import { AssemblyController } from './core/assemblyController.js';
 
 const urlParams = new URLSearchParams(window.location.search);
@@ -175,18 +167,38 @@ const baseInteriorWallEmissive = building.interiorWallMat.emissiveIntensity;
 const assembly = new AssemblyController();
 
 // Layer 0: Island base, steps, boulders, patio slate pad & bollards
-assembly.add(island.assemblyGroups.baseMound, 0, { liftY: 0.72, driftXZ: 0.04, tiltAmp: 0.02, duration: 0.56 });
+assembly.add(island.assemblyGroups.baseMound, 0, {
+  liftY: 0.72,
+  driftXZ: 0.04,
+  tiltAmp: 0.02,
+  duration: 0.56,
+});
 assembly.add(island.assemblyGroups.patioPad, 0, { liftY: 0.52, driftXZ: 0.06, tiltAmp: 0.03 });
 assembly.add(island.assemblyGroups.pathAndSteps, 0, { liftY: 0.54, driftXZ: 0.08, tiltAmp: 0.03 });
 assembly.add(island.assemblyGroups.boulders, 0, { liftY: 0.68, driftXZ: 0.14, tiltAmp: 0.06 });
-assembly.add(island.assemblyGroups.bollards, 0, { liftY: 0.65, driftXZ: 0.10, tiltAmp: 0.05 });
+assembly.add(island.assemblyGroups.bollards, 0, { liftY: 0.65, driftXZ: 0.1, tiltAmp: 0.05 });
 
 // Layer 1: 1F architecture shell, storefront interior & furnishings
-assembly.add(building.floor1Group, 1, { liftY: 0.96, driftXZ: 0.05, tiltAmp: 0.03, duration: 0.58 });
+assembly.add(building.floor1Group, 1, {
+  liftY: 0.96,
+  driftXZ: 0.05,
+  tiltAmp: 0.03,
+  duration: 0.58,
+});
 
 // Layer 2: 2F staggered white stucco volumes + 2F planter flora
-assembly.add(building.floor2Group, 2, { liftY: 1.08, driftXZ: 0.05, tiltAmp: 0.03, duration: 0.58 });
-assembly.add(botanical.assemblyPieces.planterFloraGroup, 2, { liftY: 0.58, driftXZ: 0.08, tiltAmp: 0.05, duration: 0.46 });
+assembly.add(building.floor2Group, 2, {
+  liftY: 1.08,
+  driftXZ: 0.05,
+  tiltAmp: 0.03,
+  duration: 0.58,
+});
+assembly.add(botanical.assemblyPieces.planterFloraGroup, 2, {
+  liftY: 0.58,
+  driftXZ: 0.08,
+  tiltAmp: 0.05,
+  duration: 0.46,
+});
 
 // Layer 3: Outdoor patio furniture, trees, evergreens, understory shrubs & sculpted winter snow
 assembly.add(patio.group, 3, { liftY: 0.92, driftXZ: 0.12, tiltAmp: 0.05, duration: 0.52 });
@@ -197,27 +209,52 @@ botanical.assemblyPieces.trees.forEach((tr) =>
   assembly.add(tr, 3, { liftY: 1.15, driftXZ: 0.16, tiltAmp: 0.06, duration: 0.56 })
 );
 botanical.assemblyPieces.conifers.forEach((sp) =>
-  assembly.add(sp, 3, { liftY: 1.10, driftXZ: 0.14, tiltAmp: 0.05, duration: 0.54 })
+  assembly.add(sp, 3, { liftY: 1.1, driftXZ: 0.14, tiltAmp: 0.05, duration: 0.54 })
 );
 botanical.assemblyPieces.cypresses.forEach((cy) =>
-  assembly.add(cy, 3, { liftY: 0.95, driftXZ: 0.12, tiltAmp: 0.05, duration: 0.50 })
+  assembly.add(cy, 3, { liftY: 0.95, driftXZ: 0.12, tiltAmp: 0.05, duration: 0.5 })
 );
 botanical.assemblyPieces.ferns.forEach((fn) =>
-  assembly.add(fn, 3, { liftY: 0.52, driftXZ: 0.10, tiltAmp: 0.06, duration: 0.42 })
+  assembly.add(fn, 3, { liftY: 0.52, driftXZ: 0.1, tiltAmp: 0.06, duration: 0.42 })
 );
 botanical.assemblyPieces.hostas.forEach((hs) =>
-  assembly.add(hs, 3, { liftY: 0.52, driftXZ: 0.10, tiltAmp: 0.06, duration: 0.42 })
+  assembly.add(hs, 3, { liftY: 0.52, driftXZ: 0.1, tiltAmp: 0.06, duration: 0.42 })
 );
 botanical.assemblyPieces.shrubs.forEach((sh) =>
   assembly.add(sh, 3, { liftY: 0.56, driftXZ: 0.12, tiltAmp: 0.07, duration: 0.44 })
 );
-assembly.add(botanical.assemblyPieces.leafLitterMesh, 3, { liftY: 0.36, driftXZ: 0.04, tiltAmp: 0.02, duration: 0.42 });
+assembly.add(botanical.assemblyPieces.leafLitterMesh, 3, {
+  liftY: 0.36,
+  driftXZ: 0.04,
+  tiltAmp: 0.02,
+  duration: 0.42,
+});
 
 // Register winter snow carriers AFTER trees/building so snow settles right with them without fighting season visibility!
-assembly.add(winterSnow.assemblyCarriers.groundCarrier, 3, { liftY: 0.65, driftXZ: 0.04, tiltAmp: 0.02, duration: 0.50 });
-assembly.add(winterSnow.assemblyCarriers.building1FCarrier, 3, { liftY: 0.72, driftXZ: 0.04, tiltAmp: 0.02, duration: 0.50 });
-assembly.add(winterSnow.assemblyCarriers.building2FCarrier, 3, { liftY: 0.80, driftXZ: 0.04, tiltAmp: 0.02, duration: 0.50 });
-assembly.add(winterSnow.assemblyCarriers.treesPatioCarrier, 3, { liftY: 0.88, driftXZ: 0.06, tiltAmp: 0.03, duration: 0.52 });
+assembly.add(winterSnow.assemblyCarriers.groundCarrier, 3, {
+  liftY: 0.65,
+  driftXZ: 0.04,
+  tiltAmp: 0.02,
+  duration: 0.5,
+});
+assembly.add(winterSnow.assemblyCarriers.building1FCarrier, 3, {
+  liftY: 0.72,
+  driftXZ: 0.04,
+  tiltAmp: 0.02,
+  duration: 0.5,
+});
+assembly.add(winterSnow.assemblyCarriers.building2FCarrier, 3, {
+  liftY: 0.8,
+  driftXZ: 0.04,
+  tiltAmp: 0.02,
+  duration: 0.5,
+});
+assembly.add(winterSnow.assemblyCarriers.treesPatioCarrier, 3, {
+  liftY: 0.88,
+  driftXZ: 0.06,
+  tiltAmp: 0.03,
+  duration: 0.52,
+});
 
 assembly.finalize({ layerGap: 0.28, stagger: 0.015 });
 
@@ -261,11 +298,16 @@ function lerpCanopyPalette(palA, palB, t) {
   const cO = new THREE.Color(palA.outer).lerp(new THREE.Color(palB.outer), t);
   const cM = new THREE.Color(palA.mid).lerp(new THREE.Color(palB.mid), t);
   const cD = new THREE.Color(palA.deep).lerp(new THREE.Color(palB.deep), t);
-  return { outer: `#${cO.getHexString()}`, mid: `#${cM.getHexString()}`, deep: `#${cD.getHexString()}` };
+  return {
+    outer: `#${cO.getHexString()}`,
+    mid: `#${cM.getHexString()}`,
+    deep: `#${cD.getHexString()}`,
+  };
 }
 
 function captureBlendedSnapshot(a, b, t) {
-  const lerpHex = (hxA, hxB) => `#${new THREE.Color(hxA).lerp(new THREE.Color(hxB), t).getHexString()}`;
+  const lerpHex = (hxA, hxB) =>
+    `#${new THREE.Color(hxA).lerp(new THREE.Color(hxB), t).getHexString()}`;
   return {
     key: `snap_${Date.now()}`,
     sunColor: a.sunColor.clone().lerp(b.sunColor, t),
@@ -291,11 +333,17 @@ function captureBlendedSnapshot(a, b, t) {
       belt: lerpHex(a.wardrobe.belt, b.wardrobe.belt),
       capeColor: lerpHex(a.wardrobe.capeColor, b.wardrobe.capeColor),
       capeWeight: THREE.MathUtils.lerp(a.wardrobe.capeWeight, b.wardrobe.capeWeight, t),
-      fabricRoughness: THREE.MathUtils.lerp(a.wardrobe.fabricRoughness, b.wardrobe.fabricRoughness, t),
+      fabricRoughness: THREE.MathUtils.lerp(
+        a.wardrobe.fabricRoughness,
+        b.wardrobe.fabricRoughness,
+        t
+      ),
       racks: a.wardrobe.racks.map((hxA, i) => lerpHex(hxA, b.wardrobe.racks[i] || hxA)),
       folded: a.wardrobe.folded.map((hxA, i) => lerpHex(hxA, b.wardrobe.folded[i] || hxA)),
     },
-    canopyPalettes: a.canopyPalettes.map((palA, i) => lerpCanopyPalette(palA, b.canopyPalettes[i] || palA, t)),
+    canopyPalettes: a.canopyPalettes.map((palA, i) =>
+      lerpCanopyPalette(palA, b.canopyPalettes[i] || palA, t)
+    ),
     coniferTint: a.coniferTint.clone().lerp(b.coniferTint, t),
     cypressTint: a.cypressTint.clone().lerp(b.cypressTint, t),
     fernTint: a.fernTint.clone().lerp(b.fernTint, t),
@@ -334,7 +382,7 @@ function updateCelestialParallax() {
     currentTimeState.moonPos.y
   );
   sharedUniforms.uSunPos.value.set(
-    THREE.MathUtils.clamp(currentTimeState.sunPos.x - azDelta * 0.045, 0.04, 0.90),
+    THREE.MathUtils.clamp(currentTimeState.sunPos.x - azDelta * 0.045, 0.04, 0.9),
     currentTimeState.sunPos.y
   );
 }
@@ -358,7 +406,9 @@ function applyAtmosphere(seasonSnap = currentSeasonSnapshot, progress = timeProg
 
   const skyBlend = Math.max(time.moonLightOverride, time.skyOverride * 0.65);
   _tempSky.copy(seasonSnap.hemiSkyColor).lerp(time.hemiSkyTint, skyBlend);
-  _tempGround.copy(seasonSnap.hemiGroundColor).lerp(time.hemiGroundTint, Math.max(time.moonLightOverride, time.skyOverride * 0.7));
+  _tempGround
+    .copy(seasonSnap.hemiGroundColor)
+    .lerp(time.hemiGroundTint, Math.max(time.moonLightOverride, time.skyOverride * 0.7));
   hemiLight.color.copy(_tempSky);
   hemiLight.groundColor.copy(_tempGround);
   hemiLight.intensity = seasonSnap.hemiIntensity * time.hemiMult;
@@ -368,11 +418,21 @@ function applyAtmosphere(seasonSnap = currentSeasonSnapshot, progress = timeProg
   ambientLight.intensity = seasonSnap.ambientIntensity * time.ambientMult;
 
   // Sky cyclorama, sunset scatter, stars & moon
-  sharedUniforms.uBackdropTop.value.copy(seasonSnap.backdropTop).lerp(time.skyTop, time.backdropMix);
-  sharedUniforms.uBackdropMid.value.copy(seasonSnap.backdropMid).lerp(time.skyMid, time.backdropMix);
-  sharedUniforms.uBackdropBottom.value.copy(seasonSnap.backdropBottom).lerp(time.skyBottom, time.backdropMix);
+  sharedUniforms.uBackdropTop.value
+    .copy(seasonSnap.backdropTop)
+    .lerp(time.skyTop, time.backdropMix);
+  sharedUniforms.uBackdropMid.value
+    .copy(seasonSnap.backdropMid)
+    .lerp(time.skyMid, time.backdropMix);
+  sharedUniforms.uBackdropBottom.value
+    .copy(seasonSnap.backdropBottom)
+    .lerp(time.skyBottom, time.backdropMix);
   sharedUniforms.uHaloColor.value.copy(seasonSnap.haloColor).lerp(time.haloColor, time.backdropMix);
-  sharedUniforms.uHaloStrength.value = THREE.MathUtils.lerp(seasonSnap.haloStrength, time.haloStrength, time.backdropMix);
+  sharedUniforms.uHaloStrength.value = THREE.MathUtils.lerp(
+    seasonSnap.haloStrength,
+    time.haloStrength,
+    time.backdropMix
+  );
   sharedUniforms.uMoonMix.value = time.moonMix;
   sharedUniforms.uSunOrbMix.value = time.sunOrbMix;
   sharedUniforms.uStarStrength.value = time.starStrength;
@@ -405,7 +465,8 @@ function applyAtmosphere(seasonSnap = currentSeasonSnapshot, progress = timeProg
   building.interiorWallMat.emissiveIntensity =
     baseInteriorWallEmissive + THREE.MathUtils.clamp((lightingDrive - 1.0) * 0.22, 0.0, 0.36);
 
-  const bollardDrive = Math.max(seasonBoost, time.bollardMult) + (seasonBoost - 1) * 0.18 * nightMix;
+  const bollardDrive =
+    Math.max(seasonBoost, time.bollardMult) + (seasonBoost - 1) * 0.18 * nightMix;
   island.bollardLights.forEach(({ light, baseIntensity }) => {
     light.intensity = baseIntensity * bollardDrive;
   });
@@ -669,12 +730,12 @@ if (assemblyBtn) {
 window.addEventListener('keydown', (e) => {
   if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
   const viewKeyMap = {
-    '1': 'overview',
-    '2': 'leftFront',
-    '3': 'rightFront',
-    '4': 'highSide',
-    '5': 'rear',
-    '6': 'interior',
+    1: 'overview',
+    2: 'leftFront',
+    3: 'rightFront',
+    4: 'highSide',
+    5: 'rear',
+    6: 'interior',
     r: 'overview',
     R: 'overview',
   };
@@ -732,7 +793,11 @@ function updateLayoutProjection() {
   if (aspect < 1.0) {
     const baseHalfTan = Math.tan(THREE.MathUtils.degToRad(34 * 0.5));
     const portraitHalfTan = baseHalfTan / Math.pow(Math.max(0.38, aspect), 0.74);
-    camera.fov = THREE.MathUtils.clamp(THREE.MathUtils.radToDeg(2 * Math.atan(portraitHalfTan)), 34, 62);
+    camera.fov = THREE.MathUtils.clamp(
+      THREE.MathUtils.radToDeg(2 * Math.atan(portraitHalfTan)),
+      34,
+      62
+    );
     camera.setViewOffset(w, h, 0, h * 0.02, w, h);
   } else {
     camera.fov = 34;
@@ -802,7 +867,11 @@ function animate(now) {
     timeTransition.t = Math.min(1.0, timeTransition.t + dt / timeTransition.duration);
     const t = timeTransition.t;
     const ease = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
-    timeProgress = THREE.MathUtils.lerp(timeTransition.fromProgress, timeTransition.toProgress, ease);
+    timeProgress = THREE.MathUtils.lerp(
+      timeTransition.fromProgress,
+      timeTransition.toProgress,
+      ease
+    );
     if (timeTransition.t >= 1.0) {
       timeTransition = null;
     }
@@ -851,7 +920,8 @@ window.__STAGE2__ = {
   getParticleCount: () => seasonalParticles.getActiveCount(),
   getFireflyCount: () => seasonalParticles.getFireflyCount(),
   getWardrobeState: () => building.getWardrobeState(),
-  getTheme: () => Array.from(document.body.classList).find((c) => c.startsWith('theme-')) || 'theme-day',
+  getTheme: () =>
+    Array.from(document.body.classList).find((c) => c.startsWith('theme-')) || 'theme-day',
   replayAssembly: () => assembly.play(),
   finishAssembly: () => assembly.skip(),
   getAssemblyState: () => ({

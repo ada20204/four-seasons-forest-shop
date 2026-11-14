@@ -11,7 +11,7 @@ export const sharedUniforms = {
   uBackdropBottom: { value: new THREE.Color('#f1dfc8') },
   uHaloColor: { value: new THREE.Color('#fffaf2') },
   uHaloStrength: { value: 0.42 },
-  uHaloCenter: { value: new THREE.Vector2(0.50, 0.50) },
+  uHaloCenter: { value: new THREE.Vector2(0.5, 0.5) },
   uMoonMix: { value: 0.0 },
   uMoonPos: { value: new THREE.Vector2(0.79, 0.81) },
   uSunOrbMix: { value: 0.24 },
@@ -249,9 +249,10 @@ export function createSandstoneTextures() {
     const x = rng() * size;
     const y = rng() * size;
     const r = 1 + rng() * 5.5;
-    actx.fillStyle = rng() > 0.35
-      ? `rgba(198, 178, 144, ${0.12 + rng() * 0.22})`
-      : `rgba(244, 237, 224, ${0.16 + rng() * 0.2})`;
+    actx.fillStyle =
+      rng() > 0.35
+        ? `rgba(198, 178, 144, ${0.12 + rng() * 0.22})`
+        : `rgba(244, 237, 224, ${0.16 + rng() * 0.2})`;
     actx.beginPath();
     actx.arc(x, y, r, 0, Math.PI * 2);
     actx.fill();
@@ -431,7 +432,7 @@ export function createBroadleafSprayTexture() {
       const side = k % 2 === 0 ? 1 : -1;
       const lang = baseAng + side * (0.48 + rng() * 0.55);
       const len = (54 + rng() * 38) * (1.08 - t * 0.24);
-      const wid = len * (0.30 + rng() * 0.09);
+      const wid = len * (0.3 + rng() * 0.09);
       drawLeaf(ox, oy, len, wid, lang, 0.35 + t * 0.6 + rng() * 0.25);
     }
   }
@@ -441,7 +442,14 @@ export function createBroadleafSprayTexture() {
     const a = rng() * Math.PI * 2;
     const d = rng() * 68;
     const len = 46 + rng() * 28;
-    drawLeaf(256 + Math.cos(a) * d, 256 + Math.sin(a) * d, len, len * 0.34, a + (rng() - 0.5), rng());
+    drawLeaf(
+      256 + Math.cos(a) * d,
+      256 + Math.sin(a) * d,
+      len,
+      len * 0.34,
+      a + (rng() - 0.5),
+      rng()
+    );
   }
 
   const tex = new THREE.CanvasTexture(canvas);
@@ -472,7 +480,7 @@ export function createFernFrondTexture() {
   const pairs = 19;
   for (let i = 0; i < pairs; i++) {
     const t = i / (pairs - 1); // 0 bottom, 1 tip
-    const y = THREE.MathUtils.lerp(h * 0.90, h * 0.07, t);
+    const y = THREE.MathUtils.lerp(h * 0.9, h * 0.07, t);
     const envelope = Math.sin(Math.pow(t, 0.58) * Math.PI * 0.96);
     const len = 14 + envelope * 102;
     const wid = 8 + envelope * 7;
@@ -529,7 +537,7 @@ export function createHydrangeaClusterTexture() {
     }
     ctx.fillStyle = 'rgba(255, 252, 232, 0.95)';
     ctx.beginPath();
-    ctx.arc(0, 0, r * 0.20, 0, Math.PI * 2);
+    ctx.arc(0, 0, r * 0.2, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
   };
@@ -716,7 +724,7 @@ export function createClearStorefrontGlassMaterial() {
   return new THREE.MeshPhysicalMaterial({
     color: new THREE.Color('#fffaf2'),
     transparent: true,
-    opacity: 0.10,
+    opacity: 0.1,
     roughness: 0.05,
     metalness: 0.04,
     ior: 1.5,

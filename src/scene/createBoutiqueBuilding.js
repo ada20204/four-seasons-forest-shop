@@ -23,7 +23,10 @@ function createGarment(matFabric, brassMat, { length = 0.72, width = 0.24, flare
   const g = new THREE.Group();
 
   // Slim hanger hook + shoulder bar
-  const hook = new THREE.Mesh(new THREE.TorusGeometry(0.022, 0.005, 6, 12, Math.PI * 1.2), brassMat);
+  const hook = new THREE.Mesh(
+    new THREE.TorusGeometry(0.022, 0.005, 6, 12, Math.PI * 1.2),
+    brassMat
+  );
   hook.position.set(0, 0.04, 0);
   g.add(hook);
 
@@ -63,7 +66,10 @@ function createBoutiqueRack(length, height, brassMat, garmentMats, rng, count = 
   }
 
   // Horizontal hang bar
-  const rail = new THREE.Mesh(new THREE.CylinderGeometry(0.016, 0.016, length + 0.03, 10), brassMat);
+  const rail = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.016, 0.016, length + 0.03, 10),
+    brassMat
+  );
   rail.rotation.z = Math.PI / 2;
   rail.position.y = height;
   g.add(rail);
@@ -151,20 +157,20 @@ function createShowcaseMannequin(oakMat, brassMat) {
 
   // Profile ordered bottom-to-top along outer shell so LatheGeometry outward normals (+X x +Y = +Z) face exterior
   const capeProfile = [
-    new THREE.Vector2(0.176, -0.180), // inner lining hem fold
-    new THREE.Vector2(0.184, -0.220), // rounded bottom hem bevel
+    new THREE.Vector2(0.176, -0.18), // inner lining hem fold
+    new THREE.Vector2(0.184, -0.22), // rounded bottom hem bevel
     new THREE.Vector2(0.198, -0.215), // lower cape hem above waist belt
-    new THREE.Vector2(0.190, -0.140), // flared lower silhouette
+    new THREE.Vector2(0.19, -0.14), // flared lower silhouette
     new THREE.Vector2(0.178, -0.075), // sculpted shoulder drape
     new THREE.Vector2(0.158, -0.015), // clears bodice outer rim (0.14 at y=1.41) cleanly!
-    new THREE.Vector2(0.090, 0.008),  // collarbone slope
-    new THREE.Vector2(0.068, 0.022),  // high collar roll top
-    new THREE.Vector2(0.056, 0.015),  // neck inner edge
+    new THREE.Vector2(0.09, 0.008), // collarbone slope
+    new THREE.Vector2(0.068, 0.022), // high collar roll top
+    new THREE.Vector2(0.056, 0.015), // neck inner edge
   ];
   const capeGeo = new THREE.LatheGeometry(capeProfile, 24);
   capeGeo.computeVertexNormals();
   const capeMesh = new THREE.Mesh(capeGeo, capeMat);
-  capeMesh.scale.set(1.0, 1.0, 0.80);
+  capeMesh.scale.set(1.0, 1.0, 0.8);
   capeMesh.castShadow = true;
   capeGroup.add(capeMesh);
   g.add(capeGroup);
@@ -196,7 +202,11 @@ function createIndoorPottedPlant(potMat, leafSprayMat, scale = 1.0) {
   g.add(trunk);
 
   // Articulated upper branch stems
-  for (const [ang, tilt] of [[0.4, 0.35], [2.4, 0.32], [4.4, 0.38]]) {
+  for (const [ang, tilt] of [
+    [0.4, 0.35],
+    [2.4, 0.32],
+    [4.4, 0.38],
+  ]) {
     const sub = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.014, 0.26, 5), barkMat);
     sub.position.set(Math.cos(ang) * 0.07, 0.72, Math.sin(ang) * 0.07);
     sub.rotation.z = -Math.cos(ang) * tilt;
@@ -210,8 +220,8 @@ function createIndoorPottedPlant(potMat, leafSprayMat, scale = 1.0) {
     [0, 0.84, 0, 0, 0],
     [0, 0.84, 0, Math.PI * 0.5, 0.15],
     [0.11, 0.72, 0.08, 0.9, 0.35],
-    [-0.11, 0.75, 0.07, -0.7, -0.30],
-    [0.05, 0.68, -0.10, 2.2, 0.28],
+    [-0.11, 0.75, 0.07, -0.7, -0.3],
+    [0.05, 0.68, -0.1, 2.2, 0.28],
     [-0.06, 0.92, -0.04, 1.3, -0.22],
   ];
   clusters.forEach(([x, y, z, ry, rx]) => {
@@ -251,7 +261,10 @@ function buildWindowUnit({ width, height, frameMat, glassMat, bays = 1, hasDoorS
   // Interior vertical mullions
   for (let b = 1; b < bays; b++) {
     const x = THREE.MathUtils.lerp(-width * 0.5, width * 0.5, b / bays);
-    const mul = new THREE.Mesh(new THREE.BoxGeometry(0.042, height - fThick, fDepth * 0.85), frameMat);
+    const mul = new THREE.Mesh(
+      new THREE.BoxGeometry(0.042, height - fThick, fDepth * 0.85),
+      frameMat
+    );
     mul.position.x = x;
     g.add(mul);
   }
@@ -259,15 +272,25 @@ function buildWindowUnit({ width, height, frameMat, glassMat, bays = 1, hasDoorS
   if (hasDoorSplit) {
     // Center meeting stiles & horizontal transom bar + brass door pulls
     const transomY = height * 0.28;
-    const transom = new THREE.Mesh(new THREE.BoxGeometry(width - fThick, 0.045, fDepth * 0.85), frameMat);
+    const transom = new THREE.Mesh(
+      new THREE.BoxGeometry(width - fThick, 0.045, fDepth * 0.85),
+      frameMat
+    );
     transom.position.y = transomY;
     g.add(transom);
 
-    const stile = new THREE.Mesh(new THREE.BoxGeometry(0.048, height * 0.78, fDepth * 0.9), frameMat);
+    const stile = new THREE.Mesh(
+      new THREE.BoxGeometry(0.048, height * 0.78, fDepth * 0.9),
+      frameMat
+    );
     stile.position.y = -height * 0.11;
     g.add(stile);
 
-    const handleMat = new THREE.MeshStandardMaterial({ color: '#c49b5a', metalness: 0.75, roughness: 0.28 });
+    const handleMat = new THREE.MeshStandardMaterial({
+      color: '#c49b5a',
+      metalness: 0.75,
+      roughness: 0.28,
+    });
     for (const hx of [-0.07, 0.07]) {
       const h = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.42, 8), handleMat);
       h.position.set(hx, -height * 0.12, fDepth * 0.55);
@@ -393,14 +416,14 @@ export function createBoutiqueBuilding() {
   group.add(floor1F);
 
   // Right stacked-stone pier & full right facade wall (X: 2.55 .. 3.92, Z: -4.02 .. 0.48)
-  const rightPierWall = new THREE.Mesh(new THREE.BoxGeometry(1.37, 2.74, 4.50), stoneMat);
+  const rightPierWall = new THREE.Mesh(new THREE.BoxGeometry(1.37, 2.74, 4.5), stoneMat);
   rightPierWall.position.set(3.235, 1.59, -1.77);
   rightPierWall.castShadow = true;
   rightPierWall.receiveShadow = true;
   group.add(rightPierWall);
 
   // Far-left corner stone wall (X: -4.45 .. -4.10, Z: -4.02 .. 0.48)
-  const leftCornerWall = new THREE.Mesh(new THREE.BoxGeometry(0.35, 2.74, 4.50), stoneMat);
+  const leftCornerWall = new THREE.Mesh(new THREE.BoxGeometry(0.35, 2.74, 4.5), stoneMat);
   leftCornerWall.position.set(-4.275, 1.59, -1.77);
   leftCornerWall.castShadow = true;
   leftCornerWall.receiveShadow = true;
@@ -488,7 +511,7 @@ export function createBoutiqueBuilding() {
   group.add(rightSideFrame);
 
   // Left vertical cedar wood slat screen (recessed alcove X: -4.10 .. -1.42, Z = 0.05)
-  const slatBackdrop = new THREE.Mesh(new THREE.BoxGeometry(2.70, 2.66, 0.14), darkTrimMat);
+  const slatBackdrop = new THREE.Mesh(new THREE.BoxGeometry(2.7, 2.66, 0.14), darkTrimMat);
   slatBackdrop.position.set(-2.76, 1.61, -0.06);
   slatBackdrop.castShadow = true;
   slatBackdrop.receiveShadow = true;
@@ -496,7 +519,7 @@ export function createBoutiqueBuilding() {
 
   const slatCount = 21;
   for (let i = 0; i < slatCount; i++) {
-    const sx = THREE.MathUtils.lerp(-4.02, -1.50, i / (slatCount - 1));
+    const sx = THREE.MathUtils.lerp(-4.02, -1.5, i / (slatCount - 1));
     const slat = new THREE.Mesh(new THREE.BoxGeometry(0.068, 2.62, 0.14), cedarMat);
     slat.position.set(sx, 1.61, 0.07);
     slat.castShadow = true;
@@ -517,14 +540,14 @@ export function createBoutiqueBuilding() {
   group.add(innerBackWall);
 
   const innerRightWall = new THREE.Mesh(new THREE.BoxGeometry(0.14, 2.66, 3.85), interiorWallMat);
-  innerRightWall.position.set(2.50, 1.62, -1.68);
+  innerRightWall.position.set(2.5, 1.62, -1.68);
   innerRightWall.receiveShadow = true;
   group.add(innerRightWall);
 
   // Front 1F Glass Storefront Bays (X: -1.42 .. +2.55, Z = +0.42)
   const leftBay = buildWindowUnit({
     width: 1.14,
-    height: 2.50,
+    height: 2.5,
     frameMat: darkTrimMat,
     glassMat,
     bays: 1,
@@ -534,7 +557,7 @@ export function createBoutiqueBuilding() {
 
   const doubleDoor = buildWindowUnit({
     width: 1.44,
-    height: 2.50,
+    height: 2.5,
     frameMat: darkTrimMat,
     glassMat,
     bays: 1,
@@ -545,7 +568,7 @@ export function createBoutiqueBuilding() {
 
   const rightBay = buildWindowUnit({
     width: 1.41,
-    height: 2.50,
+    height: 2.5,
     frameMat: darkTrimMat,
     glassMat,
     bays: 1,
@@ -591,9 +614,12 @@ export function createBoutiqueBuilding() {
   interiorLight1FMannequin.position.set(1.85, 2.45, -0.55);
   group.add(interiorLight1FMannequin);
 
-  for (const cx of [-0.85, 0.42, 1.80]) {
+  for (const cx of [-0.85, 0.42, 1.8]) {
     for (const cz of [-0.65, -2.15]) {
-      const ceilDisc = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.018, 10), warmLedMat);
+      const ceilDisc = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.06, 0.06, 0.018, 10),
+        warmLedMat
+      );
       ceilDisc.position.set(cx, 2.845, cz);
       group.add(ceilDisc);
     }
@@ -632,7 +658,9 @@ export function createBoutiqueBuilding() {
 
   // Folded garment stacks atop counter
   const foldColors = ['#d8ccb8', '#8b9980', '#efe8dc'];
-  const foldMats = foldColors.map((fc) => new THREE.MeshStandardMaterial({ color: fc, roughness: 0.85 }));
+  const foldMats = foldColors.map(
+    (fc) => new THREE.MeshStandardMaterial({ color: fc, roughness: 0.85 })
+  );
   foldMats.forEach((fMat, idx) => {
     const fold = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.055, 0.22), fMat);
     fold.position.set(0.22, 0.81 + idx * 0.055, 0.02);
@@ -663,7 +691,10 @@ export function createBoutiqueBuilding() {
   group.add(mannequin);
 
   // 1F Pendant Lamp hanging above mannequin/counter area
-  const pendantCord = new THREE.Mesh(new THREE.CylinderGeometry(0.006, 0.006, 0.55, 6), darkTrimMat);
+  const pendantCord = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.006, 0.006, 0.55, 6),
+    darkTrimMat
+  );
   pendantCord.position.set(1.52, 2.55, -1.25);
   group.add(pendantCord);
   const pendantShade = new THREE.Mesh(new THREE.SphereGeometry(0.11, 14, 12), warmLedMat);
@@ -693,31 +724,31 @@ export function createBoutiqueBuilding() {
   const floor2StartIdx = group.children.length;
 
   // A. Rear-Left Stepped White Block (`X: -3.58 .. -0.68, Z: -3.90 .. -0.32, Y: 3.08 .. 5.48`)
-  const left2FShell = new THREE.Mesh(new THREE.BoxGeometry(2.90, 2.40, 3.58), stuccoMat);
+  const left2FShell = new THREE.Mesh(new THREE.BoxGeometry(2.9, 2.4, 3.58), stuccoMat);
   left2FShell.position.set(-2.13, 4.28, -2.11);
   left2FShell.castShadow = true;
   left2FShell.receiveShadow = true;
   group.add(left2FShell);
 
   // Left 2F recessed dark flat membrane roof inside raised coping parapet
-  const left2FRoof = new THREE.Mesh(new THREE.BoxGeometry(2.60, 0.08, 3.28), roofMembraneMat);
+  const left2FRoof = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.08, 3.28), roofMembraneMat);
   left2FRoof.position.set(-2.13, 5.46, -2.11);
   left2FRoof.receiveShadow = true;
   group.add(left2FRoof);
 
   // Raised parapet rim on left 2F block
   const parapetLeftTop = new THREE.Mesh(new THREE.BoxGeometry(2.92, 0.14, 0.16), stuccoMat);
-  parapetLeftTop.position.set(-2.13, 5.54, -0.40);
+  parapetLeftTop.position.set(-2.13, 5.54, -0.4);
   const parapetLeftRear = parapetLeftTop.clone();
   parapetLeftRear.position.z = -3.82;
   const parapetLeftSide = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.14, 3.58), stuccoMat);
-  parapetLeftSide.position.set(-3.50, 5.54, -2.11);
+  parapetLeftSide.position.set(-3.5, 5.54, -2.11);
   group.add(parapetLeftTop, parapetLeftRear, parapetLeftSide);
 
   // B. Main Front Cantilevered White Volume (`X: -0.70 .. +4.10, Z: -3.76 .. +1.22, Y: 3.08 .. 5.96`)
   // Built cleanly from hollow slabs/walls so front panoramic window has real 3D showroom depth!
-  const floor2F = new THREE.Mesh(new THREE.BoxGeometry(4.80, 0.24, 4.98), stuccoMat);
-  floor2F.position.set(1.70, 3.20, -1.27);
+  const floor2F = new THREE.Mesh(new THREE.BoxGeometry(4.8, 0.24, 4.98), stuccoMat);
+  floor2F.position.set(1.7, 3.2, -1.27);
   floor2F.castShadow = true;
   floor2F.receiveShadow = true;
   group.add(floor2F);
@@ -789,8 +820,8 @@ export function createBoutiqueBuilding() {
   }
 
   // Rear wall of 2F block (`Z = -3.64`) + rear horizontal clerestory window
-  const wall2FRear = new THREE.Mesh(new THREE.BoxGeometry(4.80, 2.74, 0.24), stuccoMat);
-  wall2FRear.position.set(1.70, 4.57, -3.64);
+  const wall2FRear = new THREE.Mesh(new THREE.BoxGeometry(4.8, 2.74, 0.24), stuccoMat);
+  wall2FRear.position.set(1.7, 4.57, -3.64);
   wall2FRear.castShadow = true;
   wall2FRear.receiveShadow = true;
   group.add(wall2FRear);
@@ -820,46 +851,46 @@ export function createBoutiqueBuilding() {
   group.add(rear2FWin);
 
   // Front facade stucco surround around the panoramic 2F window
-  const frontSillWall = new THREE.Mesh(new THREE.BoxGeometry(4.80, 0.56, 0.24), stuccoMat);
-  frontSillWall.position.set(1.70, 3.60, 1.10);
+  const frontSillWall = new THREE.Mesh(new THREE.BoxGeometry(4.8, 0.56, 0.24), stuccoMat);
+  frontSillWall.position.set(1.7, 3.6, 1.1);
   frontSillWall.castShadow = true;
   frontSillWall.receiveShadow = true;
   group.add(frontSillWall);
 
-  const frontHeaderWall = new THREE.Mesh(new THREE.BoxGeometry(4.80, 0.42, 0.24), stuccoMat);
-  frontHeaderWall.position.set(1.70, 5.79, 1.10);
+  const frontHeaderWall = new THREE.Mesh(new THREE.BoxGeometry(4.8, 0.42, 0.24), stuccoMat);
+  frontHeaderWall.position.set(1.7, 5.79, 1.1);
   frontHeaderWall.castShadow = true;
   frontHeaderWall.receiveShadow = true;
   group.add(frontHeaderWall);
 
   const frontLeftPier2F = new THREE.Mesh(new THREE.BoxGeometry(0.42, 1.78, 0.24), stuccoMat);
-  frontLeftPier2F.position.set(-0.49, 4.70, 1.10);
+  frontLeftPier2F.position.set(-0.49, 4.7, 1.1);
   frontLeftPier2F.castShadow = true;
   frontLeftPier2F.receiveShadow = true;
   group.add(frontLeftPier2F);
 
   const frontRightPier2F = new THREE.Mesh(new THREE.BoxGeometry(0.46, 1.78, 0.24), stuccoMat);
-  frontRightPier2F.position.set(3.87, 4.70, 1.10);
+  frontRightPier2F.position.set(3.87, 4.7, 1.1);
   frontRightPier2F.castShadow = true;
   frontRightPier2F.receiveShadow = true;
   group.add(frontRightPier2F);
 
   // 2F Roof ceiling slab + parapet walls + recessed membrane roof (`高位侧面_概念.png` flat roof cap!)
   const ceiling2F = new THREE.Mesh(new THREE.BoxGeometry(4.78, 0.14, 4.94), stuccoMat);
-  ceiling2F.position.set(1.70, 5.88, -1.27);
+  ceiling2F.position.set(1.7, 5.88, -1.27);
   ceiling2F.castShadow = true;
   ceiling2F.receiveShadow = true;
   group.add(ceiling2F);
 
-  const roofMembrane2F = new THREE.Mesh(new THREE.BoxGeometry(4.44, 0.05, 4.60), roofMembraneMat);
-  roofMembrane2F.position.set(1.70, 5.95, -1.27);
+  const roofMembrane2F = new THREE.Mesh(new THREE.BoxGeometry(4.44, 0.05, 4.6), roofMembraneMat);
+  roofMembrane2F.position.set(1.7, 5.95, -1.27);
   roofMembrane2F.receiveShadow = true;
   group.add(roofMembrane2F);
 
   // Parapet coping ring around 2F main block
   const copingSpecs = [
-    [4.82, 0.14, 0.16, 1.70, 6.01, 1.14],
-    [4.82, 0.14, 0.16, 1.70, 6.01, -3.68],
+    [4.82, 0.14, 0.16, 1.7, 6.01, 1.14],
+    [4.82, 0.14, 0.16, 1.7, 6.01, -3.68],
     [0.16, 0.14, 4.98, -0.62, 6.01, -1.27],
     [0.16, 0.14, 4.98, 4.02, 6.01, -1.27],
   ];
@@ -874,7 +905,7 @@ export function createBoutiqueBuilding() {
   // 2F Panoramic Window (Recessed cleanly at Z = 1.03 inside white overhang box)
   const window2F = buildWindowUnit({
     width: 3.92,
-    height: 1.70,
+    height: 1.7,
     frameMat: darkTrimMat,
     glassMat,
     bays: 3,
@@ -883,7 +914,7 @@ export function createBoutiqueBuilding() {
   group.add(window2F);
 
   // Built-in 2F Planter Box Trough underneath window (`X: -0.28 .. 3.64`)
-  const planterWall = new THREE.Mesh(new THREE.BoxGeometry(3.96, 0.28, 0.30), stuccoMat);
+  const planterWall = new THREE.Mesh(new THREE.BoxGeometry(3.96, 0.28, 0.3), stuccoMat);
   planterWall.position.set(1.68, 3.66, 1.24);
   planterWall.castShadow = true;
   planterWall.receiveShadow = true;
@@ -898,14 +929,14 @@ export function createBoutiqueBuilding() {
   // 4. SECOND FLOOR BOUTIQUE SHOWROOM INTERIOR
   // ==========================================================
 
-  const floor2FOak = new THREE.Mesh(new THREE.BoxGeometry(4.30, 0.05, 4.10), oakMat);
+  const floor2FOak = new THREE.Mesh(new THREE.BoxGeometry(4.3, 0.05, 4.1), oakMat);
   floor2FOak.position.set(1.68, 3.345, -1.15);
   floor2FOak.receiveShadow = true;
   group.add(floor2FOak);
 
   // Inner back showcase wall (`Z = -2.25`) catching warm amber uplight behind clothing rail!
   const innerWall2F = new THREE.Mesh(new THREE.BoxGeometry(4.32, 2.42, 0.14), interiorWallMat);
-  innerWall2F.position.set(1.68, 4.55, -2.30);
+  innerWall2F.position.set(1.68, 4.55, -2.3);
   innerWall2F.receiveShadow = true;
   group.add(innerWall2F);
 
@@ -939,7 +970,7 @@ export function createBoutiqueBuilding() {
   group.add(plant2FL);
 
   const plant2FR = createIndoorPottedPlant(ceramicPotMat, indoorLeafMat, 1.18);
-  plant2FR.position.set(3.40, 3.37, 0.20);
+  plant2FR.position.set(3.4, 3.37, 0.2);
   group.add(plant2FR);
 
   // Partition building children cleanly into 1F & 2F groups for layered assembly animation
@@ -974,7 +1005,7 @@ export function createBoutiqueBuilding() {
   function updateWardrobe(wardrobe) {
     if (!wardrobe) return;
     mannequinObj.dressMat.color.set(wardrobe.dress);
-    mannequinObj.dressMat.roughness = wardrobe.fabricRoughness ?? 0.80;
+    mannequinObj.dressMat.roughness = wardrobe.fabricRoughness ?? 0.8;
     mannequinObj.beltMat.color.set(wardrobe.belt);
     mannequinObj.capeMat.color.set(wardrobe.capeColor);
 

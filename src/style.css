@@ -18,9 +18,17 @@ body {
   overflow: hidden;
   background: #f9efe2;
   color: #2f2924;
-  font-family: 'Inter', 'PingFang SC', 'Microsoft YaHei', system-ui, -apple-system, sans-serif;
+  font-family:
+    'Inter',
+    'PingFang SC',
+    'Microsoft YaHei',
+    system-ui,
+    -apple-system,
+    sans-serif;
   -webkit-font-smoothing: antialiased;
-  transition: background 0.45s ease, color 0.45s ease;
+  transition:
+    background 0.45s ease,
+    color 0.45s ease;
 }
 
 .stage-shell {
@@ -62,7 +70,9 @@ body {
   letter-spacing: 0.22em;
   text-transform: uppercase;
   color: rgba(65, 52, 42, 0.62);
-  transition: color 0.4s ease, text-shadow 0.4s ease;
+  transition:
+    color 0.4s ease,
+    text-shadow 0.4s ease;
 }
 
 .brand-title-row {
@@ -78,7 +88,9 @@ body {
   font-weight: 500;
   letter-spacing: 0.04em;
   color: rgba(45, 36, 30, 0.88);
-  transition: color 0.4s ease, text-shadow 0.4s ease;
+  transition:
+    color 0.4s ease,
+    text-shadow 0.4s ease;
 }
 
 .season-badge {
@@ -94,7 +106,10 @@ body {
   border: 1px solid rgba(110, 88, 66, 0.14);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  transition: color 0.4s ease, background 0.4s ease, border-color 0.4s ease;
+  transition:
+    color 0.4s ease,
+    background 0.4s ease,
+    border-color 0.4s ease;
 }
 
 .hud-panel {
@@ -115,7 +130,10 @@ body {
   box-shadow: 0 8px 24px rgba(64, 48, 34, 0.09);
   width: max-content;
   max-width: calc(100vw - 24px);
-  transition: background 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease;
+  transition:
+    background 0.4s ease,
+    border-color 0.4s ease,
+    box-shadow 0.4s ease;
 }
 
 .hud-row {
@@ -177,7 +195,11 @@ body {
   padding: 5px 11px;
   border-radius: 999px;
   cursor: pointer;
-  transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease, transform 0.12s ease;
+  transition:
+    background 0.18s ease,
+    color 0.18s ease,
+    border-color 0.18s ease,
+    transform 0.12s ease;
   white-space: nowrap;
 }
 

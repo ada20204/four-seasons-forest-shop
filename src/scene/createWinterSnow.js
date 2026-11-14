@@ -12,7 +12,7 @@ function createRng(seed = 20261201) {
 function hash2D(x, z, seed = 13.7) {
   return (
     Math.sin(x * 1.43 + z * 1.91 + seed) * 0.55 +
-    Math.cos(x * 2.71 - z * 2.13 + seed * 1.7) * 0.30 +
+    Math.cos(x * 2.71 - z * 2.13 + seed * 1.7) * 0.3 +
     Math.sin(x * 4.35 + z * 3.87 - seed * 0.9) * 0.15
   );
 }
@@ -98,13 +98,17 @@ function createPillowedSlabGeometry({
     vz += Math.sin(angle) * (belly + rimNoise * 0.048 * edgeWeight);
 
     const centerCrown = THREE.MathUtils.smoothstep(edgeDist, 0.0, 0.26);
-    const moundWave = (0.5 + 0.5 * hash2D(vx * 0.9, vz * 0.9, seed + 5)) * 0.10;
+    const moundWave = (0.5 + 0.5 * hash2D(vx * 0.9, vz * 0.9, seed + 5)) * 0.1;
     const topTarget = thickness * (0.55 + 0.52 * centerCrown) + moundWave * centerCrown;
     const bottomDroop = -droop * (0.45 + 0.55 * (0.5 + 0.5 * rimNoise)) * edgeWeight;
 
     vy = THREE.MathUtils.lerp(bottomDroop, topTarget, ty);
     if (ty < 0.15) {
-      vy = THREE.MathUtils.lerp(bottomDroop, 0.015, THREE.MathUtils.smoothstep(edgeDist, 0.0, 0.18));
+      vy = THREE.MathUtils.lerp(
+        bottomDroop,
+        0.015,
+        THREE.MathUtils.smoothstep(edgeDist, 0.0, 0.18)
+      );
     }
 
     pos.setXYZ(i, vx, vy, vz);
@@ -128,7 +132,7 @@ function createSnowCloudMoundGeometry({
   detail = 16,
   lobeStrength = 0.22,
 }) {
-  const geo = new THREE.SphereGeometry(1, detail, Math.max(9, Math.floor(detail * 0.70)));
+  const geo = new THREE.SphereGeometry(1, detail, Math.max(9, Math.floor(detail * 0.7)));
   const pos = geo.attributes.position;
   const uv = geo.attributes.uv;
 
@@ -200,7 +204,7 @@ function createMultiLobeCanopyPillowGeometry() {
   const lobes = [
     { offset: [0, 0.04, 0], rx: 0.78, ry: 0.58, rz: 0.78, seed: 617, skirt: 0.14 },
     { offset: [-0.36, -0.02, 0.22], rx: 0.56, ry: 0.46, rz: 0.52, seed: 631, skirt: 0.12 },
-    { offset: [0.34, -0.03, -0.20], rx: 0.54, ry: 0.44, rz: 0.54, seed: 643, skirt: 0.12 },
+    { offset: [0.34, -0.03, -0.2], rx: 0.54, ry: 0.44, rz: 0.54, seed: 643, skirt: 0.12 },
   ];
 
   const geos = lobes.map((l) => {
@@ -235,7 +239,7 @@ function createContinuousGroundSnowGeometry({ outlineCurve, stones, patioOrigin 
     contour.push(new THREE.Vector2(p.x * 0.945, p.z * 0.945));
   }
 
-  function boxExclusion(x, z, x0, x1, z0, z1, feather = 0.40) {
+  function boxExclusion(x, z, x0, x1, z0, z1, feather = 0.4) {
     const dx = Math.max(x0 - x, 0, x - x1);
     const dz = Math.max(z0 - z, 0, z - z1);
     const dist = Math.hypot(dx, dz);
@@ -257,7 +261,8 @@ function createContinuousGroundSnowGeometry({ outlineCurve, stones, patioOrigin 
 
     // Gentle dome swell away from edges, soft rolled snow edge plunging cleanly at gravel curb
     const rimTaper = 1 - THREE.MathUtils.smoothstep(rFrac, 0.87, 0.985);
-    const curbCrest = Math.sin(THREE.MathUtils.clamp((rFrac - 0.72) / 0.22, 0, 1) * Math.PI) * 0.042;
+    const curbCrest =
+      Math.sin(THREE.MathUtils.clamp((rFrac - 0.72) / 0.22, 0, 1) * Math.PI) * 0.042;
     top = THREE.MathUtils.lerp(0.185, top + curbCrest, rimTaper);
 
     // 1. Keep boutique interior floor & foundation wall apron completely snow-free
@@ -265,7 +270,7 @@ function createContinuousGroundSnowGeometry({ outlineCurve, stones, patioOrigin 
     top = THREE.MathUtils.lerp(top, 0.15, buildingMask);
 
     // 2. Keep center walkway & entrance step treads navigable (`x in [-0.60..1.44], z in [0.55..1.85]`)
-    const entryWalkMask = boxExclusion(x, z, -0.60, 1.44, 0.55, 1.85, 0.32);
+    const entryWalkMask = boxExclusion(x, z, -0.6, 1.44, 0.55, 1.85, 0.32);
     top = THREE.MathUtils.lerp(top, 0.155, entryWalkMask);
 
     // 3. Carve natural pockets around stepping stones with plump hugging snow collars
@@ -281,7 +286,7 @@ function createContinuousGroundSnowGeometry({ outlineCurve, stones, patioOrigin 
       const lz = dx * sn + dz * cs;
       const normDist = Math.hypot(lx / (st.rx * 1.12), lz / (st.rz * 1.12));
       if (normDist < 1.36) {
-        const clear = 1 - THREE.MathUtils.smoothstep(normDist, 0.70, 1.06);
+        const clear = 1 - THREE.MathUtils.smoothstep(normDist, 0.7, 1.06);
         if (clear > maxStoneClear) maxStoneClear = clear;
         const rimBump = Math.exp(-Math.pow((normDist - 1.18) / 0.22, 2)) * 0.055;
         if (rimBump > stoneCollar) stoneCollar = rimBump;
@@ -370,13 +375,13 @@ function createUmbrellaSnowDomeGeometry(radius = 1.54, eaveY = 2.18, apexY = 2.6
       for (let a = 0; a <= angCount; a++) {
         const ang = (a / angCount) * Math.PI * 2;
         const facetStep = (Math.PI * 2) / segs;
-        const localAng = ((ang % facetStep) + facetStep) % facetStep - facetStep * 0.5;
+        const localAng = (((ang % facetStep) + facetStep) % facetStep) - facetStep * 0.5;
         const polyScale = Math.cos(facetStep * 0.5) / Math.max(0.45, Math.cos(localAng));
         const px = Math.cos(ang) * octR * polyScale;
         const pz = Math.sin(ang) * octR * polyScale;
 
         const ribProximity = 1 - Math.abs(localAng) / (facetStep * 0.5);
-        const sag = -0.030 * Math.sin(ribProximity * Math.PI) * t;
+        const sag = -0.03 * Math.sin(ribProximity * Math.PI) * t;
         const eaveCurl = -0.062 * THREE.MathUtils.smoothstep(t, 0.84, 1.0);
         const py = baseSurfY + domeOffset + sag + eaveCurl - eaveY;
 
@@ -480,8 +485,8 @@ export function createWinterSnow({ island, botanical, patio }) {
     seed: 101,
   });
   const mainRoofSnow = new THREE.Mesh(mainRoofGeo, snowMat);
-  mainRoofSnow.position.set(1.70, 6.06, -1.27);
-  building2FCarrier.add(registerPuff(mainRoofSnow, 0.90));
+  mainRoofSnow.position.set(1.7, 6.06, -1.27);
+  building2FCarrier.add(registerPuff(mainRoofSnow, 0.9));
 
   const leftRoofGeo = createPillowedSlabGeometry({
     width: 2.96,
@@ -495,7 +500,7 @@ export function createWinterSnow({ island, botanical, patio }) {
   });
   const leftRoofSnow = new THREE.Mesh(leftRoofGeo, snowMat);
   leftRoofSnow.position.set(-2.13, 5.59, -2.11);
-  building2FCarrier.add(registerPuff(leftRoofSnow, 0.90));
+  building2FCarrier.add(registerPuff(leftRoofSnow, 0.9));
 
   const planterSnowGeo = createPillowedSlabGeometry({
     width: 3.92,
@@ -516,7 +521,7 @@ export function createWinterSnow({ island, botanical, patio }) {
   // ==========================================================
   const canopyLeftWingGeo = createPillowedSlabGeometry({
     width: 1.06,
-    depth: 5.00,
+    depth: 5.0,
     thickness: 0.32,
     overhang: 0.11,
     droop: 0.17,
@@ -525,7 +530,7 @@ export function createWinterSnow({ island, botanical, patio }) {
     seed: 104,
   });
   const canopyLeftWing = new THREE.Mesh(canopyLeftWingGeo, snowMat);
-  canopyLeftWing.position.set(-4.06, 3.07, -1.60);
+  canopyLeftWing.position.set(-4.06, 3.07, -1.6);
   building1FCarrier.add(registerPuff(canopyLeftWing, 0.88));
 
   const canopyFrontLeftGeo = createPillowedSlabGeometry({
@@ -544,10 +549,10 @@ export function createWinterSnow({ island, botanical, patio }) {
 
   const canopyRearEdgeGeo = createPillowedSlabGeometry({
     width: 7.58,
-    depth: 0.40,
+    depth: 0.4,
     thickness: 0.21,
     overhang: 0.06,
-    droop: 0.10,
+    droop: 0.1,
     nx: 26,
     nz: 6,
     seed: 106,
@@ -569,7 +574,15 @@ export function createWinterSnow({ island, botanical, patio }) {
   groundCarrier.add(registerPuff(groundBlanket, 0.99));
 
   // Entrance steps, boulders, bollards, shrubs, ferns & hostas consolidated into ONE InstancedMesh
-  const groundMoundGeo = createSnowCloudMoundGeometry({ rx: 1.0, ry: 0.44, rz: 1.0, skirt: 0.11, detail: 16, seed: 309, lobeStrength: 0.20 });
+  const groundMoundGeo = createSnowCloudMoundGeometry({
+    rx: 1.0,
+    ry: 0.44,
+    rz: 1.0,
+    skirt: 0.11,
+    detail: 16,
+    seed: 309,
+    lobeStrength: 0.2,
+  });
   const groundMoundData = [];
   const gmDummy = new THREE.Object3D();
 
@@ -584,7 +597,7 @@ export function createWinterSnow({ island, botanical, patio }) {
         rotY: (idx * 0.7 + side) * 1.1,
         rotZ: 0,
         rx: 0.36 * (0.92 + (idx % 2) * 0.14),
-        ry: (0.145 / 0.44) * (0.94 + (side > 0 ? 0.10 : 0)),
+        ry: (0.145 / 0.44) * (0.94 + (side > 0 ? 0.1 : 0)),
         rz: 0.26 * 0.94,
       });
     });
@@ -595,7 +608,7 @@ export function createWinterSnow({ island, botanical, patio }) {
     groundMoundData.push({
       x: st.x + side * (st.rx * 0.56),
       y: 0.312,
-      z: st.z + (idx === 0 ? 0.10 : -0.05),
+      z: st.z + (idx === 0 ? 0.1 : -0.05),
       rotX: 0,
       rotY: st.rot + side * 0.35,
       rotZ: 0,
@@ -642,10 +655,10 @@ export function createWinterSnow({ island, botanical, patio }) {
       x: s.x,
       y: crownY,
       z: s.z,
-      rotX: ((i % 3) - 1) * 0.10,
+      rotX: ((i % 3) - 1) * 0.1,
       rotY: i * 0.92,
       rotZ: ((i % 2) - 0.5) * 0.12,
-      rx: 0.46 * s.w * (s.spikes ? 0.64 : 0.90),
+      rx: 0.46 * s.w * (s.spikes ? 0.64 : 0.9),
       ry: (0.22 / 0.44) * (0.78 + (i % 3) * 0.14),
       rz: 0.46 * s.w * (s.spikes ? 0.64 : 0.86),
     });
@@ -654,7 +667,7 @@ export function createWinterSnow({ island, botanical, patio }) {
   botanical.fernCoords.forEach(([fx, fy, fz, sc], i) => {
     groundMoundData.push({
       x: fx,
-      y: fy + 0.30 * sc,
+      y: fy + 0.3 * sc,
       z: fz,
       rotX: 0,
       rotY: i * 1.05,
@@ -698,7 +711,11 @@ export function createWinterSnow({ island, botanical, patio }) {
   // Multi-lobe plush organic cloud clusters (`canopySnowInst`) hugging twigs & foliage
   const clusters = botanical.canopySnowClusters;
   const cloudPillowGeo = createMultiLobeCanopyPillowGeometry();
-  const canopySnowInst = new THREE.InstancedMesh(cloudPillowGeo, snowMat, Math.max(1, clusters.length));
+  const canopySnowInst = new THREE.InstancedMesh(
+    cloudPillowGeo,
+    snowMat,
+    Math.max(1, clusters.length)
+  );
   canopySnowInst.castShadow = true;
   canopySnowInst.receiveShadow = true;
 
@@ -711,9 +728,9 @@ export function createWinterSnow({ island, botanical, patio }) {
     const rotX = (rng() - 0.5) * 0.24;
     const rotY = rng() * Math.PI * 2;
     const rotZ = (rng() - 0.5) * 0.24;
-    const rx = cl.radius * (1.10 + rng() * 0.20);
-    const ry = cl.radius * (0.68 + rng() * 0.20);
-    const rz = cl.radius * (1.08 + rng() * 0.20);
+    const rx = cl.radius * (1.1 + rng() * 0.2);
+    const ry = cl.radius * (0.68 + rng() * 0.2);
+    const rz = cl.radius * (1.08 + rng() * 0.2);
 
     canopyBaseData.push({ x: cl.x, y: posY, z: cl.z, rotX, rotY, rotZ, rx, ry, rz });
     dummy.position.set(cl.x, posY, cl.z);
@@ -727,7 +744,15 @@ export function createWinterSnow({ island, botanical, patio }) {
   treesPatioCarrier.add(canopySnowInst);
 
   // Soft cotton-tuft clumps (unit XZ radius) hugging rear spruces & foreground columnar cypresses
-  const evergreenTuftGeo = createSnowCloudMoundGeometry({ rx: 1.0, ry: 0.65, rz: 1.0, skirt: 0.14, detail: 10, seed: 655, lobeStrength: 0.24 });
+  const evergreenTuftGeo = createSnowCloudMoundGeometry({
+    rx: 1.0,
+    ry: 0.65,
+    rz: 1.0,
+    skirt: 0.14,
+    detail: 10,
+    seed: 655,
+    lobeStrength: 0.24,
+  });
   const evergreenBaseData = [];
 
   botanical.coniferSpecs.forEach((c) => {
@@ -745,7 +770,7 @@ export function createWinterSnow({ island, botanical, patio }) {
     const tiers = 7;
     for (let t = 0; t < tiers; t++) {
       const f = t / (tiers - 1);
-      const yBase = 0.24 + THREE.MathUtils.lerp(c.h * 0.20, c.h * 0.86, f);
+      const yBase = 0.24 + THREE.MathUtils.lerp(c.h * 0.2, c.h * 0.86, f);
       const tierR = c.r * THREE.MathUtils.lerp(0.82, 0.28, f);
       const tuftCount = Math.max(4, Math.round(8 - f * 4));
       for (let k = 0; k < tuftCount; k++) {
@@ -825,12 +850,26 @@ export function createWinterSnow({ island, botanical, patio }) {
   umbrellaSnow.position.set(pOrg.x, pOrg.y + 2.18, pOrg.z);
   treesPatioCarrier.add(registerPuff(umbrellaSnow, 0.85));
 
-  const tableSnowGeo = createSnowCloudMoundGeometry({ rx: 0.56, ry: 0.12, rz: 0.56, skirt: 0.03, detail: 14, seed: 701 });
+  const tableSnowGeo = createSnowCloudMoundGeometry({
+    rx: 0.56,
+    ry: 0.12,
+    rz: 0.56,
+    skirt: 0.03,
+    detail: 14,
+    seed: 701,
+  });
   const tableSnow = new THREE.Mesh(tableSnowGeo, snowMat);
   tableSnow.position.set(pOrg.x, pOrg.y + 0.74, pOrg.z);
   treesPatioCarrier.add(registerPuff(tableSnow, 0.72));
 
-  const seatSnowGeo = createSnowCloudMoundGeometry({ rx: 0.23, ry: 0.07, rz: 0.23, skirt: 0.015, detail: 10, seed: 702 });
+  const seatSnowGeo = createSnowCloudMoundGeometry({
+    rx: 0.23,
+    ry: 0.07,
+    rz: 0.23,
+    skirt: 0.015,
+    detail: 10,
+    seed: 702,
+  });
   const backSnowGeo = createPillowedSlabGeometry({
     width: 0.36,
     depth: 0.068,

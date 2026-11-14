@@ -98,7 +98,7 @@ function createSnowflakeTexture() {
   const halo = ctx.createRadialGradient(48, 48, 3, 48, 48, 44);
   halo.addColorStop(0, 'rgba(255, 255, 255, 1.0)');
   halo.addColorStop(0.35, 'rgba(246, 251, 255, 0.92)');
-  halo.addColorStop(0.70, 'rgba(232, 242, 255, 0.42)');
+  halo.addColorStop(0.7, 'rgba(232, 242, 255, 0.42)');
   halo.addColorStop(1, 'rgba(225, 238, 255, 0.0)');
   ctx.fillStyle = halo;
   ctx.beginPath();
@@ -147,7 +147,7 @@ const MODE_CONFIGS = {
     fallMin: 0.52,
     fallMax: 0.94,
     swayAmp: 0.65,
-    scaleMin: 0.10,
+    scaleMin: 0.1,
     scaleMax: 0.19,
     spinRate: 1.9,
     tint: '#ffffff',
@@ -168,7 +168,10 @@ const MODE_CONFIGS = {
  * Pooled seasonal falling particle system (sakura petals, summer leaves, autumn leaves, snowflakes).
  * Zero cross-season leftovers & bounded recycle loop without accumulation leaks.
  */
-export function createSeasonalParticles({ initialSeason = 'summer', initiallyEnabled = true } = {}) {
+export function createSeasonalParticles({
+  initialSeason = 'summer',
+  initiallyEnabled = true,
+} = {}) {
   const MAX_COUNT = 170;
   const rng = createRng(779911);
 
@@ -368,7 +371,8 @@ export function createSeasonalParticles({ initialSeason = 'summer', initiallyEna
         } else {
           dummy.rotation.set(0, 0, 0);
         }
-        const blink = 0.25 + 0.75 * Math.pow(0.5 + 0.5 * Math.sin(timeSec * f.blinkSpeed + f.phase), 2);
+        const blink =
+          0.25 + 0.75 * Math.pow(0.5 + 0.5 * Math.sin(timeSec * f.blinkSpeed + f.phase), 2);
         dummy.scale.setScalar(f.size * blink * fireflyWeight);
         dummy.updateMatrix();
         fireflyMesh.setMatrixAt(i, dummy.matrix);

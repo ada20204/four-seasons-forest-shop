@@ -1,7 +1,9 @@
 node_modules/
 dist/
-.verify-stage1/
-.verify-stage2/
-.verify-screenshots/
+coverage/
+.verify-*/
 *.log
 .DS_Store
+.env
+.env.local
+.env.*.local

@@ -43,7 +43,11 @@ export class AssemblyController {
       restQuat: obj.quaternion.clone(),
       restScale: obj.scale.clone(),
       offset: new THREE.Vector3((r() - 0.5) * driftXZ, liftY + r() * 0.45, (r() - 0.5) * driftXZ),
-      tilt: new THREE.Euler((r() - 0.5) * tiltAmp, (r() - 0.5) * tiltAmp * 1.4, (r() - 0.5) * tiltAmp),
+      tilt: new THREE.Euler(
+        (r() - 0.5) * tiltAmp,
+        (r() - 0.5) * tiltAmp * 1.4,
+        (r() - 0.5) * tiltAmp
+      ),
       dur: duration + r() * 0.14,
       delay: 0,
     });

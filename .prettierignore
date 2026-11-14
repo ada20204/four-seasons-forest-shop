@@ -1,0 +1,6 @@
+dist/
+node_modules/
+coverage/
+.verify-*/
+assets/readme/
+package-lock.json

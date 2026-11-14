@@ -20,21 +20,21 @@ function createRng(seed = 88421) {
  */
 export function getIslandOutlineCurve() {
   const pts = [
-    new THREE.Vector3(-0.65, 0, 6.45),   // front foreground stepping-stone cove
-    new THREE.Vector3(2.25, 0, 6.20),
-    new THREE.Vector3(5.05, 0, 5.15),    // front-right boulder bend
-    new THREE.Vector3(7.35, 0, 3.35),    // right patio/cypress corner
+    new THREE.Vector3(-0.65, 0, 6.45), // front foreground stepping-stone cove
+    new THREE.Vector3(2.25, 0, 6.2),
+    new THREE.Vector3(5.05, 0, 5.15), // front-right boulder bend
+    new THREE.Vector3(7.35, 0, 3.35), // right patio/cypress corner
     new THREE.Vector3(8.25, 0, 1.15),
-    new THREE.Vector3(7.70, 0, -1.65),
+    new THREE.Vector3(7.7, 0, -1.65),
     new THREE.Vector3(6.65, 0, -4.35),
-    new THREE.Vector3(4.15, 0, -5.85),   // rear-right trees
-    new THREE.Vector3(0.40, 0, -6.45),   // rear conifers
+    new THREE.Vector3(4.15, 0, -5.85), // rear-right trees
+    new THREE.Vector3(0.4, 0, -6.45), // rear conifers
     new THREE.Vector3(-3.85, 0, -6.15),
-    new THREE.Vector3(-6.85, 0, -4.55),  // rear-left flank
-    new THREE.Vector3(-8.20, 0, -1.75),
-    new THREE.Vector3(-8.15, 0, 1.35),   // left hero tree bed
+    new THREE.Vector3(-6.85, 0, -4.55), // rear-left flank
+    new THREE.Vector3(-8.2, 0, -1.75),
+    new THREE.Vector3(-8.15, 0, 1.35), // left hero tree bed
     new THREE.Vector3(-6.75, 0, 3.65),
-    new THREE.Vector3(-4.65, 0, 5.25),   // front-left rock/fern cove
+    new THREE.Vector3(-4.65, 0, 5.25), // front-left rock/fern cove
     new THREE.Vector3(-2.65, 0, 6.05),
   ];
   return new THREE.CatmullRomCurve3(pts, true, 'catmullrom', 0.45);
@@ -68,9 +68,7 @@ function buildOrganicIslandGeometry(curve) {
       const ang = (idx / angSegs) * Math.PI * 2;
 
       // Subtle organic scallop perturbation along perimeter
-      const edgeWobble =
-        Math.sin(ang * 11.0 + 0.5) * 0.14 +
-        Math.cos(ang * 19.0 - 0.8) * 0.08;
+      const edgeWobble = Math.sin(ang * 11.0 + 0.5) * 0.14 + Math.cos(ang * 19.0 - 0.8) * 0.08;
       const edgeScale = 1.0 + edgeWobble * t * 0.45;
 
       const x = THREE.MathUtils.lerp(center.x, p.x * edgeScale, t);
@@ -79,16 +77,17 @@ function buildOrganicIslandGeometry(curve) {
       // Gentle architectural mound: flatter under building/courtyard, rising subtly in rear/side garden beds
       const baseHeight = 0.21;
       const gardenLift =
-        Math.max(0, -z * 0.025) +
-        (Math.abs(x) > 4.3 ? (Math.abs(x) - 4.3) * 0.045 : 0);
-      const ripple =
-        Math.sin(x * 0.85 + z * 0.65) * 0.022 +
-        Math.cos(x * 1.4 - z * 1.1) * 0.015;
+        Math.max(0, -z * 0.025) + (Math.abs(x) > 4.3 ? (Math.abs(x) - 4.3) * 0.045 : 0);
+      const ripple = Math.sin(x * 0.85 + z * 0.65) * 0.022 + Math.cos(x * 1.4 - z * 1.1) * 0.015;
 
       // Smooth edge bevel tapering down to y = 0.005 on outer 14%
       const rimFalloff = t > 0.86 ? 1.0 - THREE.MathUtils.smoothstep(t, 0.86, 1.0) : 1.0;
       const edgeLip = t > 0.86 && t < 0.99 ? Math.sin(((t - 0.86) / 0.13) * Math.PI) * 0.03 : 0.0;
-      const y = Math.max(0.004, (baseHeight + gardenLift * (1.0 - t * 0.45) + ripple * (1.0 - t * 0.7)) * rimFalloff + edgeLip);
+      const y = Math.max(
+        0.004,
+        (baseHeight + gardenLift * (1.0 - t * 0.45) + ripple * (1.0 - t * 0.7)) * rimFalloff +
+          edgeLip
+      );
 
       positions.push(x, y, z);
       // Planar top UVs avoid polar pinching
@@ -135,7 +134,7 @@ function createBoulderGeometry(radius, seed) {
     const n1 = Math.sin(v.x * 2.1 + p1) * Math.cos(v.z * 2.3 + p2);
     const n2 = Math.sin(v.y * 3.8 - p1) * Math.sin((v.x + v.z) * 2.1);
     const strata = Math.abs(Math.sin(v.y * 5.2 + p2)) * -0.055;
-    const disp = 1.0 + n1 * 0.18 + n2 * 0.10 + strata;
+    const disp = 1.0 + n1 * 0.18 + n2 * 0.1 + strata;
     v.multiplyScalar(disp);
     v.set(v.x * sx, v.y * sy, v.z * sz);
     if (v.y < -radius * 0.18) {
@@ -227,7 +226,7 @@ function createGardenBollard(bronzeMat, bulbMat, x, y, z) {
 
   // Subtle warm local bounce light on surrounding gravel/leaves
   const light = new THREE.PointLight('#ffac48', 2.2, 4.4, 1.55);
-  light.position.set(0, 0.40, 0);
+  light.position.set(0, 0.4, 0);
   g.add(light);
 
   return g;
@@ -242,7 +241,7 @@ export function createIslandBase() {
   // 1. Studio Ground Contact Shadow Ellipse under the whole island
   const islandShadow = new THREE.Mesh(
     new THREE.PlaneGeometry(21.5, 18.0),
-    createContactShadowMaterial({ opacity: 0.30, roundness: 0.78 })
+    createContactShadowMaterial({ opacity: 0.3, roundness: 0.78 })
   );
   islandShadow.rotation.x = -Math.PI / 2;
   islandShadow.position.set(0, 0.002, 0.1);
@@ -255,7 +254,7 @@ export function createIslandBase() {
     bumpMap: gravelTex.bumpMap,
     bumpScale: 0.045,
     color: new THREE.Color('#c8ccd2'),
-    roughness: 0.90,
+    roughness: 0.9,
     metalness: 0.05,
     envMapIntensity: 0.35,
   });
@@ -286,25 +285,25 @@ export function createIslandBase() {
     { pos: [-7.05, 0.18, 2.55], r: 0.72, rotY: 2.1, seed: 103 },
     { pos: [-7.85, 0.19, 0.95], r: 0.62, rotY: 0.8, seed: 104 },
     { pos: [-7.95, 0.21, -0.75], r: 0.52, rotY: 1.9, seed: 105 },
-    { pos: [-7.45, 0.21, -2.55], r: 0.60, rotY: 2.7, seed: 106 },
+    { pos: [-7.45, 0.21, -2.55], r: 0.6, rotY: 2.7, seed: 106 },
 
     // Front center-left / center-right framing stones
-    { pos: [-2.70, 0.15, 4.35], r: 0.32, rotY: 0.5, seed: 107 },
+    { pos: [-2.7, 0.15, 4.35], r: 0.32, rotY: 0.5, seed: 107 },
     { pos: [1.75, 0.14, 5.75], r: 0.58, rotY: -0.4, seed: 108 },
     { pos: [4.75, 0.16, 4.75], r: 0.65, rotY: 0.9, seed: 109 },
     { pos: [6.45, 0.17, 3.65], r: 0.58, rotY: 1.7, seed: 110 },
     { pos: [7.65, 0.18, 2.15], r: 0.54, rotY: -1.1, seed: 111 },
     { pos: [7.85, 0.19, 0.15], r: 0.48, rotY: 0.3, seed: 112 },
-    { pos: [7.15, 0.20, -2.25], r: 0.52, rotY: 2.2, seed: 113 },
+    { pos: [7.15, 0.2, -2.25], r: 0.52, rotY: 2.2, seed: 113 },
 
     // Side courtyard accent stones + rear perimeter stones
     { pos: [3.45, 0.24, 1.55], r: 0.36, rotY: 0.6, seed: 114 },
     { pos: [-6.15, 0.22, -4.45], r: 0.54, rotY: 1.4, seed: 115 },
     { pos: [-3.95, 0.24, -5.65], r: 0.58, rotY: 2.8, seed: 116 },
-    { pos: [-1.45, 0.24, -6.05], r: 0.50, rotY: 0.9, seed: 117 },
+    { pos: [-1.45, 0.24, -6.05], r: 0.5, rotY: 0.9, seed: 117 },
     { pos: [1.35, 0.24, -6.05], r: 0.52, rotY: 1.9, seed: 118 },
     { pos: [3.95, 0.24, -5.45], r: 0.55, rotY: 0.4, seed: 119 },
-    { pos: [5.95, 0.22, -4.15], r: 0.50, rotY: 2.5, seed: 120 },
+    { pos: [5.95, 0.22, -4.15], r: 0.5, rotY: 2.5, seed: 120 },
   ];
 
   const bouldersGroup = new THREE.Group();
@@ -345,7 +344,7 @@ export function createIslandBase() {
     const radialT = i < 700 ? 0.76 + rng() * 0.23 : 0.22 + rng() * 0.65;
     const px = THREE.MathUtils.lerp(centerVec.x, edgePt.x, radialT) + (rng() - 0.5) * 0.35;
     const pz = THREE.MathUtils.lerp(centerVec.z, edgePt.z, radialT) + (rng() - 0.5) * 0.35;
-    const py = radialT > 0.88 ? THREE.MathUtils.lerp(0.20, 0.04, (radialT - 0.88) / 0.12) : 0.22;
+    const py = radialT > 0.88 ? THREE.MathUtils.lerp(0.2, 0.04, (radialT - 0.88) / 0.12) : 0.22;
 
     dummy.position.set(px, py, pz);
     dummy.rotation.set(rng() * Math.PI, rng() * Math.PI, rng() * Math.PI);
@@ -376,9 +375,9 @@ export function createIslandBase() {
 
   // 3 Wide Architectural Limestone Entrance Steps in front of storefront doors
   const stepSpecs = [
-    { x: 0.42, y: 0.24, z: 1.05, w: 2.35, h: 0.10, d: 1.05 },
-    { x: 0.42, y: 0.33, z: 0.88, w: 2.25, h: 0.10, d: 0.72 },
-    { x: 0.42, y: 0.42, z: 0.70, w: 2.15, h: 0.10, d: 0.42 },
+    { x: 0.42, y: 0.24, z: 1.05, w: 2.35, h: 0.1, d: 1.05 },
+    { x: 0.42, y: 0.33, z: 0.88, w: 2.25, h: 0.1, d: 0.72 },
+    { x: 0.42, y: 0.42, z: 0.7, w: 2.15, h: 0.1, d: 0.42 },
   ];
   const pathAndStepsGroup = new THREE.Group();
   pathAndStepsGroup.name = 'StepsAndSteppingStones';
@@ -394,7 +393,7 @@ export function createIslandBase() {
   const stones = [
     { x: -0.75, z: 5.25, rx: 1.06, rz: 0.66, rot: 0.08, seed: 201 },
     { x: 0.08, z: 4.18, rx: 0.84, rz: 0.52, rot: -0.06, seed: 202 },
-    { x: 0.62, z: 3.30, rx: 0.76, rz: 0.46, rot: 0.12, seed: 203 },
+    { x: 0.62, z: 3.3, rx: 0.76, rz: 0.46, rot: 0.12, seed: 203 },
     { x: 0.88, z: 2.52, rx: 0.68, rz: 0.42, rot: -0.05, seed: 204 },
     { x: 0.52, z: 1.88, rx: 0.62, rz: 0.38, rot: 0.04, seed: 205 },
   ];
@@ -437,10 +436,10 @@ export function createIslandBase() {
   });
 
   const bollardCoords = [
-    [-4.85, 0.22, 3.85],   // Front-left fern/hosta rock
-    [-1.42, 0.22, 1.95],   // Left entrance step guard
-    [2.18, 0.22, 1.90],    // Right entrance step guard
-    [6.65, 0.22, 2.95],    // Near right boulder/patio edge (tucked naturally)
+    [-4.85, 0.22, 3.85], // Front-left fern/hosta rock
+    [-1.42, 0.22, 1.95], // Left entrance step guard
+    [2.18, 0.22, 1.9], // Right entrance step guard
+    [6.65, 0.22, 2.95], // Near right boulder/patio edge (tucked naturally)
   ];
   const bollardsGroup = new THREE.Group();
   bollardsGroup.name = 'GardenBollards';

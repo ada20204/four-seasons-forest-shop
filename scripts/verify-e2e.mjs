@@ -2,13 +2,21 @@ import { spawn } from 'node:child_process';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
-const OUT_DIR =
-  process.env.VERIFY_OUT_DIR ||
-  path.resolve(import.meta.dirname, '../.verify-stage2');
+function normalizeBasePath(raw = '/forest-shop/') {
+  let base = String(raw).trim() || '/';
+  if (!base.startsWith('/')) base = `/${base}`;
+  if (!base.endsWith('/')) base = `${base}/`;
+  return base;
+}
+
+const BASE_PATH = normalizeBasePath(process.env.VITE_BASE_PATH ?? '/forest-shop/');
+const OUT_DIR = process.env.VERIFY_OUT_DIR || path.resolve(import.meta.dirname, '../.verify-e2e');
 const PREVIEW_PORT = process.env.VERIFY_PORT || '4175';
-const PREVIEW_URL = process.env.PREVIEW_URL || `http://127.0.0.1:${PREVIEW_PORT}/forest-shop/`;
-const WD_PORT = 4447;
+const PREVIEW_URL = process.env.PREVIEW_URL || `http://127.0.0.1:${PREVIEW_PORT}${BASE_PATH}`;
+const WD_PORT = Number(process.env.VERIFY_WD_PORT || 4447);
 const WD_BASE = `http://127.0.0.1:${WD_PORT}`;
+const FIREFOX_BIN = process.env.FIREFOX_BIN || '/snap/firefox/current/usr/lib/firefox/firefox';
+const GECKODRIVER_BIN = process.env.GECKODRIVER_BIN || '/snap/bin/geckodriver';
 
 async function wd(method, endpoint, body) {
   const res = await fetch(`${WD_BASE}${endpoint}`, {
@@ -18,7 +26,9 @@ async function wd(method, endpoint, body) {
   });
   const json = await res.json();
   if (!res.ok) {
-    throw new Error(`WebDriver ${method} ${endpoint} failed (${res.status}): ${JSON.stringify(json)}`);
+    throw new Error(
+      `WebDriver ${method} ${endpoint} failed (${res.status}): ${JSON.stringify(json)}`
+    );
   }
   return json.value;
 }
@@ -29,7 +39,7 @@ async function waitForUrl(url, label) {
       const r = await fetch(url);
       if (r.ok) return;
     } catch {
-      // retry
+      // retry until preview/geckodriver listens
     }
     await new Promise((r) => setTimeout(r, 250));
   }
@@ -67,7 +77,7 @@ async function run() {
     }
   );
 
-  const driverProc = spawn('/snap/bin/geckodriver', ['--port', String(WD_PORT)], {
+  const driverProc = spawn(GECKODRIVER_BIN, ['--port', String(WD_PORT)], {
     stdio: 'ignore',
   });
 
@@ -81,7 +91,7 @@ async function run() {
         alwaysMatch: {
           browserName: 'firefox',
           'moz:firefoxOptions': {
-            binary: '/snap/firefox/current/usr/lib/firefox/firefox',
+            binary: FIREFOX_BIN,
             args: ['-headless', '--width=1440', '--height=960'],
             prefs: {
               'webgl.force-enabled': true,
@@ -129,7 +139,10 @@ async function run() {
         [season]
       );
       await new Promise((r) => setTimeout(r, 550));
-      particleCounts[season] = await exec(sessionId, `return window.__STAGE2__.getParticleCount();`);
+      particleCounts[season] = await exec(
+        sessionId,
+        `return window.__STAGE2__.getParticleCount();`
+      );
       wardrobes[season] = await exec(sessionId, `return window.__STAGE2__.getWardrobeState();`);
       if (particleCounts[season] <= 0) {
         throw new Error(`Expected active particles for ${season}, got ${particleCounts[season]}`);
@@ -327,7 +340,7 @@ async function run() {
       zoomDelta: Number(zoomDelta.toFixed(3)),
       mobileMetrics,
     };
-    console.log('STAGE2_REPORT:', JSON.stringify(report, null, 2));
+    console.log('E2E_REPORT:', JSON.stringify(report, null, 2));
 
     if (mobileMetrics.errors.length > 0) {
       throw new Error(`Runtime errors detected: ${JSON.stringify(mobileMetrics.errors)}`);
@@ -346,11 +359,11 @@ async function run() {
       try {
         await wd('DELETE', `/session/${sessionId}`);
       } catch {
-        // ignore
+        // ignore cleanup errors
       }
     }
-    driverProc.kill('SIGKILL');
-    previewProc.kill('SIGKILL');
+    driverProc.kill('SIGTERM');
+    previewProc.kill('SIGTERM');
   }
 }
 

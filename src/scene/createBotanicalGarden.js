@@ -26,7 +26,15 @@ function createRng(seed = 707070) {
  */
 function applyVertexBreeze(
   mat,
-  { cacheKey, anchorY = 0.24, spanY = 4.0, ampX = 0.04, ampZ = 0.03, speed = 1.25, invertHang = false }
+  {
+    cacheKey,
+    anchorY = 0.24,
+    spanY = 4.0,
+    ampX = 0.04,
+    ampZ = 0.03,
+    speed = 1.25,
+    invertHang = false,
+  }
 ) {
   mat.customProgramCacheKey = () => cacheKey;
   mat.onBeforeCompile = (shader) => {
@@ -91,7 +99,13 @@ function createBroadleafMaterial(leafTex) {
  * Rewrites ez-tree leaf normals toward a soft sculptural canopy sphere & caches per-quad
  * luminance/jitter factors so seasons crossfade cleanly without rebuilding tree geometry.
  */
-function applyCanopyVolumeColors(geometry, rng, outerHex = '#cdf058', midHex = '#6fb639', deepHex = '#234a1f') {
+function applyCanopyVolumeColors(
+  geometry,
+  rng,
+  outerHex = '#cdf058',
+  midHex = '#6fb639',
+  deepHex = '#234a1f'
+) {
   geometry.computeBoundingBox();
   const box = geometry.boundingBox;
   const center = new THREE.Vector3();
@@ -261,7 +275,7 @@ function extractCanopySnowClusters(trees) {
           x: subCell.sx / subCell.count,
           y: subCell.maxY * 0.62 + (subCell.sy / subCell.count) * 0.38,
           z: subCell.sz / subCell.count,
-          radius: THREE.MathUtils.clamp(0.42 + Math.sqrt(subCell.count) * 0.065, 0.50, 0.88),
+          radius: THREE.MathUtils.clamp(0.42 + Math.sqrt(subCell.count) * 0.065, 0.5, 0.88),
         });
       }
     }
@@ -282,12 +296,9 @@ function upgradeBarkMaterial(oldMat) {
 }
 
 function isInsideBuildingInteriorCorridor(wp) {
-  const in1FOrLeft =
-    wp.x > -4.65 && wp.x < 4.20 && wp.z > -4.15 && wp.z < 1.35 && wp.y < 3.25;
-  const in2FLeft =
-    wp.x > -3.70 && wp.x < -0.55 && wp.z > -4.05 && wp.z < -0.20 && wp.y < 5.75;
-  const in2FRight =
-    wp.x > -0.85 && wp.x < 4.25 && wp.z > -3.90 && wp.z < 1.40 && wp.y < 6.25;
+  const in1FOrLeft = wp.x > -4.65 && wp.x < 4.2 && wp.z > -4.15 && wp.z < 1.35 && wp.y < 3.25;
+  const in2FLeft = wp.x > -3.7 && wp.x < -0.55 && wp.z > -4.05 && wp.z < -0.2 && wp.y < 5.75;
+  const in2FRight = wp.x > -0.85 && wp.x < 4.25 && wp.z > -3.9 && wp.z < 1.4 && wp.y < 6.25;
   return in1FOrLeft || in2FLeft || in2FRight;
 }
 
@@ -301,7 +312,11 @@ function pruneBranchesInsideBuilding(tree) {
   if (!idx) return;
 
   const invWorld = tree.branchesMesh.matrixWorld.clone().invert();
-  const safeLocal = new THREE.Vector3(tree.position.x, tree.position.y, tree.position.z).applyMatrix4(invWorld);
+  const safeLocal = new THREE.Vector3(
+    tree.position.x,
+    tree.position.y,
+    tree.position.z
+  ).applyMatrix4(invWorld);
 
   const a = new THREE.Vector3();
   const b = new THREE.Vector3();
@@ -315,7 +330,11 @@ function pruneBranchesInsideBuilding(tree) {
     a.fromBufferAttribute(pos, i0).applyMatrix4(tree.branchesMesh.matrixWorld);
     b.fromBufferAttribute(pos, i1).applyMatrix4(tree.branchesMesh.matrixWorld);
     c.fromBufferAttribute(pos, i2).applyMatrix4(tree.branchesMesh.matrixWorld);
-    mid.copy(a).add(b).add(c).multiplyScalar(1 / 3);
+    mid
+      .copy(a)
+      .add(b)
+      .add(c)
+      .multiplyScalar(1 / 3);
 
     if (
       isInsideBuildingInteriorCorridor(mid) ||
@@ -354,7 +373,14 @@ function createConiferSpruceTree(needleTex, barkMat, height = 6.2, baseRadius = 
       metalness: 0.0,
       envMapIntensity: 0.26,
     }),
-    { cacheKey: 'breeze_conifer_v1', anchorY: 0.35, spanY: height, ampX: 0.036, ampZ: 0.026, speed: 1.08 }
+    {
+      cacheKey: 'breeze_conifer_v1',
+      anchorY: 0.35,
+      spanY: height,
+      ampX: 0.036,
+      ampZ: 0.026,
+      speed: 1.08,
+    }
   );
 
   const tiers = 16;
@@ -430,7 +456,14 @@ function createColumnarCypress(needleTex, barkMat, height = 4.2, maxR = 0.48, se
       metalness: 0.0,
       envMapIntensity: 0.28,
     }),
-    { cacheKey: 'breeze_cypress_v1', anchorY: 0.32, spanY: height, ampX: 0.032, ampZ: 0.024, speed: 1.15 }
+    {
+      cacheKey: 'breeze_cypress_v1',
+      anchorY: 0.32,
+      spanY: height,
+      ampX: 0.032,
+      ampZ: 0.024,
+      speed: 1.15,
+    }
   );
 
   const rings = 22;
@@ -448,9 +481,7 @@ function createColumnarCypress(needleTex, barkMat, height = 4.2, maxR = 0.48, se
     const f = THREE.MathUtils.clamp(r / (rings - 1), 0, 1);
     const y = THREE.MathUtils.lerp(0.32, height * 0.98, f);
     const rem = Math.max(0, 1.0 - (f - 0.22) / 0.78);
-    const profile = f < 0.22
-      ? THREE.MathUtils.lerp(0.55, 1.0, f / 0.22)
-      : Math.pow(rem, 0.78);
+    const profile = f < 0.22 ? THREE.MathUtils.lerp(0.55, 1.0, f / 0.22) : Math.pow(rem, 0.78);
     const ringR = maxR * profile;
 
     for (let k = 0; k < perRing; k++) {
@@ -490,9 +521,16 @@ function createFernClump(fernTex, scale = 1.0, seed = 301) {
       alphaTest: 0.36,
       roughness: 0.72,
       side: THREE.DoubleSide,
-      envMapIntensity: 0.30,
+      envMapIntensity: 0.3,
     }),
-    { cacheKey: 'breeze_fern_v1', anchorY: 0.25, spanY: 0.56, ampX: 0.028, ampZ: 0.022, speed: 1.55 }
+    {
+      cacheKey: 'breeze_fern_v1',
+      anchorY: 0.25,
+      spanY: 0.56,
+      ampX: 0.028,
+      ampZ: 0.022,
+      speed: 1.55,
+    }
   );
 
   // Safe arched plane geometry with clamped parameter (zero NaN risk!)
@@ -512,8 +550,8 @@ function createFernClump(fernTex, scale = 1.0, seed = 301) {
     const a = (i / fronds) * Math.PI * 2 + (rng() - 0.5) * 0.24;
     const isInner = i % 3 === 0;
     dummy.position.set(0, 0, 0);
-    dummy.rotation.set(isInner ? -0.30 : 0.08 + rng() * 0.14, a, 0);
-    const sc = (isInner ? 0.70 : 0.94 + rng() * 0.22) * scale;
+    dummy.rotation.set(isInner ? -0.3 : 0.08 + rng() * 0.14, a, 0);
+    const sc = (isInner ? 0.7 : 0.94 + rng() * 0.22) * scale;
     dummy.scale.setScalar(sc);
     dummy.updateMatrix();
     matrices.push(dummy.matrix.clone());
@@ -649,7 +687,14 @@ function createBotanicalFlowerShrub(
         side: THREE.DoubleSide,
         roughness: 0.72,
       }),
-      { cacheKey: 'breeze_spike_v1', anchorY: 0.24, spanY: height, ampX: 0.026, ampZ: 0.020, speed: 1.44 }
+      {
+        cacheKey: 'breeze_spike_v1',
+        anchorY: 0.24,
+        spanY: height,
+        ampX: 0.026,
+        ampZ: 0.02,
+        speed: 1.44,
+      }
     );
     const spikeGeo = new THREE.PlaneGeometry(0.24, height * 0.92);
     const spikeMatrices = [];
@@ -672,7 +717,10 @@ function createBotanicalFlowerShrub(
         spikeMatrices.push(dummy.matrix.clone());
       }
     }
-    const mergedSpikes = new THREE.Mesh(mergeTransformedGeometry(spikeGeo, spikeMatrices), bloomMat);
+    const mergedSpikes = new THREE.Mesh(
+      mergeTransformedGeometry(spikeGeo, spikeMatrices),
+      bloomMat
+    );
     mergedSpikes.castShadow = true;
     g.add(mergedSpikes);
     spikeGeo.dispose();
@@ -693,7 +741,7 @@ function createBotanicalFlowerShrub(
     const clusterCount = 10;
     for (let i = 0; i < clusterCount; i++) {
       const a = (i / clusterCount) * Math.PI * 2 + rng() * 0.4;
-      const dist = i < 2 ? rng() * width * 0.10 : width * (0.16 + rng() * 0.18);
+      const dist = i < 2 ? rng() * width * 0.1 : width * (0.16 + rng() * 0.18);
       const cx = Math.cos(a) * dist;
       const cz = Math.sin(a) * dist;
       const cy = height * (0.48 + (i < 2 ? 0.22 : rng() * 0.16));
@@ -767,7 +815,7 @@ function pointInXZPoly(x, z, poly) {
     const zi = poly[i].z;
     const xj = poly[j].x;
     const zj = poly[j].z;
-    if ((zi > z) !== (zj > z) && x < ((xj - xi) * (z - zi)) / (zj - zi + 1e-6) + xi) {
+    if (zi > z !== zj > z && x < ((xj - xi) * (z - zi)) / (zj - zi + 1e-6) + xi) {
       inside = !inside;
     }
   }
@@ -796,7 +844,7 @@ function createAutumnLeafLitter(outlineCurve, rng) {
   inst.visible = false;
 
   const poly = outlineCurve
-    ? outlineCurve.getSpacedPoints(96).map((p) => ({ x: p.x * 0.90, z: p.z * 0.90 }))
+    ? outlineCurve.getSpacedPoints(96).map((p) => ({ x: p.x * 0.9, z: p.z * 0.9 }))
     : null;
 
   const focusSpots = [
@@ -826,7 +874,7 @@ function createAutumnLeafLitter(outlineCurve, rng) {
       const tz = spot.z + Math.sin(ang) * dist;
 
       // Stay clear of boutique interior & entrance steps
-      if (tx > -4.05 && tx < 3.85 && tz > -3.75 && tz < 0.70) continue;
+      if (tx > -4.05 && tx < 3.85 && tz > -3.75 && tz < 0.7) continue;
       if (tx > -1.35 && tx < 1.35 && tz > 0.55 && tz < 2.25) continue;
       if (poly && !pointInXZPoly(tx, tz, poly)) continue;
       x = tx;
@@ -950,7 +998,7 @@ export function createBotanicalGarden({ outlineCurve = null } = {}) {
       trunkLen: 24,
       boughLen: 14.5,
       children0: 5,
-      gnarl0: 0.10,
+      gnarl0: 0.1,
       forceDir: { x: 0.22, y: 1, z: -0.05 },
       forceStr: -0.004,
       leafSize: 3.8,
@@ -1014,8 +1062,8 @@ export function createBotanicalGarden({ outlineCurve = null } = {}) {
     tree.options.branch.sections = { 0: 12, 1: 8, 2: 6, 3: 3 };
     tree.options.branch.segments = { 0: 8, 1: 6, 2: 4, 3: 3 };
     tree.options.branch.start = { 1: 0.44, 2: 0.26, 3: 0.15 };
-    tree.options.branch.taper = { 0: 0.70, 1: 0.56, 2: 0.68, 3: 0.52 };
-    tree.options.branch.twist = { 0: 0.10, 1: -0.10, 2: 0.06, 3: 0 };
+    tree.options.branch.taper = { 0: 0.7, 1: 0.56, 2: 0.68, 3: 0.52 };
+    tree.options.branch.twist = { 0: 0.1, 1: -0.1, 2: 0.06, 3: 0 };
 
     tree.options.leaves.type = LeafType.Ash;
     tree.options.leaves.billboard = Billboard.Double;
@@ -1078,7 +1126,7 @@ export function createBotanicalGarden({ outlineCurve = null } = {}) {
 
     const rootShadow = new THREE.Mesh(
       new THREE.PlaneGeometry(2.1, 2.1),
-      createContactShadowMaterial({ opacity: 0.40, roundness: 0.9 })
+      createContactShadowMaterial({ opacity: 0.4, roundness: 0.9 })
     );
     rootShadow.rotation.x = -Math.PI / 2;
     rootShadow.position.set(s.pos[0], s.pos[1] + 0.015, s.pos[2]);
@@ -1095,7 +1143,7 @@ export function createBotanicalGarden({ outlineCurve = null } = {}) {
   const coniferSpecs = [
     { x: -0.35, z: -5.55, h: 7.45, r: 1.38, seed: 501 },
     { x: 0.85, z: -5.75, h: 8.15, r: 1.48, seed: 502 },
-    { x: 2.05, z: -5.45, h: 7.15, r: 1.30, seed: 503 },
+    { x: 2.05, z: -5.45, h: 7.15, r: 1.3, seed: 503 },
   ];
   const conifers = [];
   coniferSpecs.forEach((c) => {
@@ -1128,7 +1176,7 @@ export function createBotanicalGarden({ outlineCurve = null } = {}) {
   const fernCoords = [
     [-6.05, 0.24, 1.45, 1.25, 701],
     [-7.05, 0.24, 0.55, 1.05, 702],
-    [-4.95, 0.24, 2.20, 0.92, 703],
+    [-4.95, 0.24, 2.2, 0.92, 703],
     [3.05, 0.24, 1.15, 0.85, 704],
     [6.15, 0.24, 0.85, 0.95, 705],
     [6.65, 0.24, 1.55, 0.88, 706],
@@ -1154,25 +1202,160 @@ export function createBotanicalGarden({ outlineCurve = null } = {}) {
   });
 
   const shrubSpecs = [
-    { x: -4.95, z: 2.95, w: 1.12, h: 0.84, bloom: '#fcf7ec', spikes: false, role: 'hydrangea', seed: 801 },
-    { x: -3.55, z: 2.55, w: 0.92, h: 0.72, bloom: '#9872dc', spikes: true, role: 'spike', seed: 816 },
-    { x: -3.15, z: 3.45, w: 1.02, h: 0.96, bloom: '#825ad6', spikes: true, role: 'spike', seed: 802 },
-    { x: -2.35, z: 3.85, w: 0.88, h: 0.65, bloom: '#eda2be', spikes: false, role: 'pinkMound', seed: 803 },
-    { x: -6.15, z: 2.95, w: 0.80, h: 0.54, bloom: '#d8de58', spikes: false, role: 'yellow', seed: 804 },
-    { x: -2.08, z: 1.45, w: 0.86, h: 0.68, bloom: '#f7f1e3', spikes: false, role: 'hydrangeaAlt', seed: 805 },
+    {
+      x: -4.95,
+      z: 2.95,
+      w: 1.12,
+      h: 0.84,
+      bloom: '#fcf7ec',
+      spikes: false,
+      role: 'hydrangea',
+      seed: 801,
+    },
+    {
+      x: -3.55,
+      z: 2.55,
+      w: 0.92,
+      h: 0.72,
+      bloom: '#9872dc',
+      spikes: true,
+      role: 'spike',
+      seed: 816,
+    },
+    {
+      x: -3.15,
+      z: 3.45,
+      w: 1.02,
+      h: 0.96,
+      bloom: '#825ad6',
+      spikes: true,
+      role: 'spike',
+      seed: 802,
+    },
+    {
+      x: -2.35,
+      z: 3.85,
+      w: 0.88,
+      h: 0.65,
+      bloom: '#eda2be',
+      spikes: false,
+      role: 'pinkMound',
+      seed: 803,
+    },
+    {
+      x: -6.15,
+      z: 2.95,
+      w: 0.8,
+      h: 0.54,
+      bloom: '#d8de58',
+      spikes: false,
+      role: 'yellow',
+      seed: 804,
+    },
+    {
+      x: -2.08,
+      z: 1.45,
+      w: 0.86,
+      h: 0.68,
+      bloom: '#f7f1e3',
+      spikes: false,
+      role: 'hydrangeaAlt',
+      seed: 805,
+    },
 
-    { x: 2.95, z: 2.05, w: 1.04, h: 0.82, bloom: '#faf6ec', spikes: false, role: 'hydrangea', seed: 806 },
-    { x: 3.35, z: 4.10, w: 1.16, h: 0.98, bloom: '#845cd8', spikes: true, role: 'spike', seed: 807 },
-    { x: 4.12, z: 4.55, w: 0.90, h: 0.62, bloom: '#e898ba', spikes: false, role: 'pinkMound', seed: 808 },
-    { x: 2.25, z: 4.65, w: 0.86, h: 0.56, bloom: '#fcf8ee', spikes: false, role: 'hydrangeaAlt', seed: 809 },
-    { x: 6.85, z: 2.25, w: 0.98, h: 0.84, bloom: '#865fda', spikes: true, role: 'spike', seed: 810 },
-    { x: 7.25, z: 1.95, w: 0.82, h: 0.58, bloom: '#fcf8ee', spikes: false, role: 'hydrangea', seed: 817 },
+    {
+      x: 2.95,
+      z: 2.05,
+      w: 1.04,
+      h: 0.82,
+      bloom: '#faf6ec',
+      spikes: false,
+      role: 'hydrangea',
+      seed: 806,
+    },
+    { x: 3.35, z: 4.1, w: 1.16, h: 0.98, bloom: '#845cd8', spikes: true, role: 'spike', seed: 807 },
+    {
+      x: 4.12,
+      z: 4.55,
+      w: 0.9,
+      h: 0.62,
+      bloom: '#e898ba',
+      spikes: false,
+      role: 'pinkMound',
+      seed: 808,
+    },
+    {
+      x: 2.25,
+      z: 4.65,
+      w: 0.86,
+      h: 0.56,
+      bloom: '#fcf8ee',
+      spikes: false,
+      role: 'hydrangeaAlt',
+      seed: 809,
+    },
+    {
+      x: 6.85,
+      z: 2.25,
+      w: 0.98,
+      h: 0.84,
+      bloom: '#865fda',
+      spikes: true,
+      role: 'spike',
+      seed: 810,
+    },
+    {
+      x: 7.25,
+      z: 1.95,
+      w: 0.82,
+      h: 0.58,
+      bloom: '#fcf8ee',
+      spikes: false,
+      role: 'hydrangea',
+      seed: 817,
+    },
 
-    { x: 5.05, z: -1.45, w: 0.95, h: 0.74, bloom: '#f8f4ea', spikes: false, role: 'hydrangeaAlt', seed: 812 },
-    { x: 5.15, z: -2.65, w: 0.92, h: 0.72, bloom: '#f8f4ea', spikes: false, role: 'hydrangea', seed: 813 },
+    {
+      x: 5.05,
+      z: -1.45,
+      w: 0.95,
+      h: 0.74,
+      bloom: '#f8f4ea',
+      spikes: false,
+      role: 'hydrangeaAlt',
+      seed: 812,
+    },
+    {
+      x: 5.15,
+      z: -2.65,
+      w: 0.92,
+      h: 0.72,
+      bloom: '#f8f4ea',
+      spikes: false,
+      role: 'hydrangea',
+      seed: 813,
+    },
 
-    { x: -2.55, z: -4.95, w: 1.10, h: 0.78, bloom: '#f8f4ea', spikes: false, role: 'hydrangea', seed: 814 },
-    { x: 1.95, z: -4.65, w: 1.00, h: 0.78, bloom: '#8b65dc', spikes: true, role: 'spike', seed: 815 },
+    {
+      x: -2.55,
+      z: -4.95,
+      w: 1.1,
+      h: 0.78,
+      bloom: '#f8f4ea',
+      spikes: false,
+      role: 'hydrangea',
+      seed: 814,
+    },
+    {
+      x: 1.95,
+      z: -4.65,
+      w: 1.0,
+      h: 0.78,
+      bloom: '#8b65dc',
+      spikes: true,
+      role: 'spike',
+      seed: 815,
+    },
   ];
 
   const shrubs = [];
@@ -1231,7 +1414,7 @@ export function createBotanicalGarden({ outlineCurve = null } = {}) {
       cacheKey: 'breeze_ivy_v1',
       anchorY: 3.72,
       spanY: 0.48,
-      ampX: 0.030,
+      ampX: 0.03,
       ampZ: 0.022,
       speed: 1.48,
       invertHang: true,
@@ -1253,7 +1436,11 @@ export function createBotanicalGarden({ outlineCurve = null } = {}) {
 
     for (let c = 0; c < 2; c++) {
       planterDummy.position.set(x, 3.88 + rng() * 0.06, 1.24 + (rng() - 0.5) * 0.06);
-      planterDummy.rotation.set(-0.35 + rng() * 0.65, c * Math.PI * 0.5 + rng() * 0.45, (rng() - 0.5) * 0.35);
+      planterDummy.rotation.set(
+        -0.35 + rng() * 0.65,
+        c * Math.PI * 0.5 + rng() * 0.45,
+        (rng() - 0.5) * 0.35
+      );
       planterDummy.scale.setScalar(1);
       planterDummy.updateMatrix();
       pLeafMatrices.push(planterDummy.matrix.clone());
@@ -1273,7 +1460,7 @@ export function createBotanicalGarden({ outlineCurve = null } = {}) {
   }
 
   // Natural grouped trailing ivy cascades across full 2F planter (`基准图.png` spilling swags)
-  const swagCenters = [-0.10, 0.30, 0.72, 1.16, 1.62, 2.08, 2.52, 2.96, 3.38];
+  const swagCenters = [-0.1, 0.3, 0.72, 1.16, 1.62, 2.08, 2.52, 2.96, 3.38];
   swagCenters.forEach((cx, sIdx) => {
     const tendrils = sIdx === 0 || sIdx === swagCenters.length - 1 || sIdx % 2 === 0 ? 4 : 3;
     for (let k = 0; k < tendrils; k++) {
@@ -1281,13 +1468,13 @@ export function createBotanicalGarden({ outlineCurve = null } = {}) {
       const dropScaleY = (0.52 + rng() * 0.74) * (k === Math.floor(tendrils / 2) ? 1.24 : 0.82);
       const leanZ = (k - (tendrils - 1) * 0.5) * 0.22 + (rng() - 0.5) * 0.14;
 
-      planterDummy.position.set(cx + offset, 3.70 - dropScaleY * 0.16, 1.445 + rng() * 0.03);
+      planterDummy.position.set(cx + offset, 3.7 - dropScaleY * 0.16, 1.445 + rng() * 0.03);
       planterDummy.rotation.set(0.18 + rng() * 0.14, (rng() - 0.5) * 0.55, leanZ);
       planterDummy.scale.set(0.95 + rng() * 0.35, dropScaleY, 1.0);
       planterDummy.updateMatrix();
       pVineMatrices.push(planterDummy.matrix.clone());
 
-      planterDummy.rotation.set(0.20, 0.95 + rng() * 0.4, leanZ * 0.85);
+      planterDummy.rotation.set(0.2, 0.95 + rng() * 0.4, leanZ * 0.85);
       planterDummy.updateMatrix();
       pVineMatrices.push(planterDummy.matrix.clone());
     }
@@ -1295,8 +1482,14 @@ export function createBotanicalGarden({ outlineCurve = null } = {}) {
 
   planterFloraGroup.add(
     new THREE.Mesh(mergeTransformedGeometry(planterLeafGeo, pLeafMatrices), planterLeafMat),
-    new THREE.Mesh(mergeTransformedGeometry(planterBloomGeo, pPrimaryMatrices), planterBloomPrimaryMat),
-    new THREE.Mesh(mergeTransformedGeometry(planterBloomGeo, pSecondaryMatrices), planterBloomSecondaryMat),
+    new THREE.Mesh(
+      mergeTransformedGeometry(planterBloomGeo, pPrimaryMatrices),
+      planterBloomPrimaryMat
+    ),
+    new THREE.Mesh(
+      mergeTransformedGeometry(planterBloomGeo, pSecondaryMatrices),
+      planterBloomSecondaryMat
+    ),
     new THREE.Mesh(mergeTransformedGeometry(vineGeo, pVineMatrices), vineMat)
   );
   planterLeafGeo.dispose();
@@ -1329,21 +1522,33 @@ export function createBotanicalGarden({ outlineCurve = null } = {}) {
     }
 
     conifers.forEach((sp) => {
-      if (sp.userData.needleMat) sp.userData.needleMat.color.lerpColors(presetA.coniferTint, presetB.coniferTint, t);
+      if (sp.userData.needleMat)
+        sp.userData.needleMat.color.lerpColors(presetA.coniferTint, presetB.coniferTint, t);
     });
     cypresses.forEach((cp) => {
-      if (cp.userData.needleMat) cp.userData.needleMat.color.lerpColors(presetA.cypressTint, presetB.cypressTint, t);
+      if (cp.userData.needleMat)
+        cp.userData.needleMat.color.lerpColors(presetA.cypressTint, presetB.cypressTint, t);
     });
     ferns.forEach((f) => {
-      if (f.userData.frondMat) f.userData.frondMat.color.lerpColors(presetA.fernTint, presetB.fernTint, t);
+      if (f.userData.frondMat)
+        f.userData.frondMat.color.lerpColors(presetA.fernTint, presetB.fernTint, t);
     });
     hostas.forEach((h) => {
-      if (h.userData.hostaMat) h.userData.hostaMat.color.lerpColors(presetA.hostaTint, presetB.hostaTint, t);
+      if (h.userData.hostaMat)
+        h.userData.hostaMat.color.lerpColors(presetA.hostaTint, presetB.hostaTint, t);
     });
 
     planterLeafMat.color.lerpColors(presetA.planterLeafTint, presetB.planterLeafTint, t);
-    planterBloomPrimaryMat.color.lerpColors(presetA.planterBloomPrimary, presetB.planterBloomPrimary, t);
-    planterBloomSecondaryMat.color.lerpColors(presetA.planterBloomSecondary, presetB.planterBloomSecondary, t);
+    planterBloomPrimaryMat.color.lerpColors(
+      presetA.planterBloomPrimary,
+      presetB.planterBloomPrimary,
+      t
+    );
+    planterBloomSecondaryMat.color.lerpColors(
+      presetA.planterBloomSecondary,
+      presetB.planterBloomSecondary,
+      t
+    );
     vineMat.color.lerpColors(presetA.vineTint, presetB.vineTint, t);
 
     cLeafA.set(presetA.shrubPalette.leaf);
@@ -1358,7 +1563,11 @@ export function createBotanicalGarden({ outlineCurve = null } = {}) {
       }
     });
 
-    const litterWeight = THREE.MathUtils.lerp(presetA.autumnLitterWeight, presetB.autumnLitterWeight, t);
+    const litterWeight = THREE.MathUtils.lerp(
+      presetA.autumnLitterWeight,
+      presetB.autumnLitterWeight,
+      t
+    );
     leafLitter.setWeight(litterWeight);
   }
 

@@ -9,7 +9,7 @@ export const LIGHTING_BASELINE = {
   sunColor: new THREE.Color('#fff2dc'),
   sunIntensity: 2.78,
   // Soft bounce fill from opposite upper-left
-  fillDir: new THREE.Vector3(-0.70, 0.52, 0.35).normalize(),
+  fillDir: new THREE.Vector3(-0.7, 0.52, 0.35).normalize(),
   fillColor: new THREE.Color('#dfeafa'),
   fillIntensity: 0.62,
   // Studio sky/ground hemisphere
@@ -54,11 +54,11 @@ export const CAMERA_VIEWS = {
   rear: {
     label: '背面',
     pos: new THREE.Vector3(-5.2, 9.8, -24.2),
-    target: new THREE.Vector3(0.0, 3.85, -0.50),
+    target: new THREE.Vector3(0.0, 3.85, -0.5),
   },
   interior: {
     label: '橱窗近景',
-    pos: new THREE.Vector3(1.05, 2.40, 9.25),
-    target: new THREE.Vector3(0.52, 2.28, -0.50),
+    pos: new THREE.Vector3(1.05, 2.4, 9.25),
+    target: new THREE.Vector3(0.52, 2.28, -0.5),
   },
 };

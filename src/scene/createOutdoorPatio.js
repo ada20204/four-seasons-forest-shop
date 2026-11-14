@@ -181,7 +181,10 @@ function createMarketParasol(woodMat) {
     const len = startVec.distanceTo(endVec);
     const strut = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, len, 6), woodMat);
     strut.position.copy(startVec).lerp(endVec, 0.5);
-    strut.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), endVec.clone().sub(startVec).normalize());
+    strut.quaternion.setFromUnitVectors(
+      new THREE.Vector3(0, 1, 0),
+      endVec.clone().sub(startVec).normalize()
+    );
     g.add(strut);
   }
 
@@ -220,7 +223,7 @@ export function createOutdoorPatio() {
   group.add(tableTop);
 
   const tableApron = new THREE.Mesh(new THREE.CylinderGeometry(0.51, 0.51, 0.045, 20), teakMat);
-  tableApron.position.y = 0.70;
+  tableApron.position.y = 0.7;
   group.add(tableApron);
 
   // Cross-leg pedestal base
@@ -262,7 +265,11 @@ export function createOutdoorPatio() {
   }
 
   // Miniature matte-bronze & frosted amber candle lantern on tabletop (glows softly at dusk & night)
-  const lanternBaseMat = new THREE.MeshStandardMaterial({ color: '#2b2623', roughness: 0.48, metalness: 0.55 });
+  const lanternBaseMat = new THREE.MeshStandardMaterial({
+    color: '#2b2623',
+    roughness: 0.48,
+    metalness: 0.55,
+  });
   const lanternBulbMat = new THREE.MeshStandardMaterial({
     color: new THREE.Color('#fff5dd'),
     emissive: new THREE.Color('#ffaa42'),
@@ -271,11 +278,20 @@ export function createOutdoorPatio() {
   });
   const lanternGroup = new THREE.Group();
   lanternGroup.position.set(-0.26, 0.763, 0.22);
-  const lanternFoot = new THREE.Mesh(new THREE.CylinderGeometry(0.056, 0.062, 0.022, 12), lanternBaseMat);
+  const lanternFoot = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.056, 0.062, 0.022, 12),
+    lanternBaseMat
+  );
   lanternFoot.position.y = 0.011;
-  const lanternGlobe = new THREE.Mesh(new THREE.CylinderGeometry(0.046, 0.042, 0.125, 12), lanternBulbMat);
+  const lanternGlobe = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.046, 0.042, 0.125, 12),
+    lanternBulbMat
+  );
   lanternGlobe.position.y = 0.084;
-  const lanternCap = new THREE.Mesh(new THREE.CylinderGeometry(0.036, 0.064, 0.036, 12), lanternBaseMat);
+  const lanternCap = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.036, 0.064, 0.036, 12),
+    lanternBaseMat
+  );
   lanternCap.position.y = 0.162;
   lanternGroup.add(lanternFoot, lanternGlobe, lanternCap);
   group.add(lanternGroup);
@@ -303,9 +319,9 @@ export function createOutdoorPatio() {
 
   // 3 Teak Slatted Bistro Chairs nestled harmoniously around the table
   const chairAngles = [
-    { a: 2.38, r: 0.84, faceOffset: 0.05 },   // front-left chair
-    { a: 0.78, r: 0.86, faceOffset: -0.08 },  // front-right chair
-    { a: -1.45, r: 0.86, faceOffset: 0.0 },   // back-left chair
+    { a: 2.38, r: 0.84, faceOffset: 0.05 }, // front-left chair
+    { a: 0.78, r: 0.86, faceOffset: -0.08 }, // front-right chair
+    { a: -1.45, r: 0.86, faceOffset: 0.0 }, // back-left chair
   ];
   const chairsGroup = new THREE.Group();
   const chairSpots = [];

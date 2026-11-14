@@ -1,132 +1,178 @@
-# 四季林间服装店（Atelier in the Woods）
+<div align="center">
 
-基于 **Three.js + Vite** 构建的实时 3D 微缩精品店交互展示应用。围绕一座双层现代轻奢林间服装店微缩浮岛，呈现「春樱 / 盛夏 / 金秋 / 皑雪」四季更迭、「晴昼 / 暮色 / 月夜」光影流转、多机位浏览、分层积木入场动画与棚拍级质感渲染。
+# 四季林间服装店 · Atelier in the Woods
 
----
+**基于 Three.js + Vite 的实时 3D 微缩精品店交互展示应用**
 
-## 核心特性
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-GitHub%20Pages-253528?style=flat-square&logo=github)](https://ada20204.github.io/four-seasons-forest-shop/)
+[![CI](https://img.shields.io/github/actions/workflow/status/ada20204/four-seasons-forest-shop/ci.yml?branch=main&style=flat-square&label=CI)](https://github.com/ada20204/four-seasons-forest-shop/actions/workflows/ci.yml)
+[![Pages](https://img.shields.io/github/actions/workflow/status/ada20204/four-seasons-forest-shop/deploy-pages.yml?branch=main&style=flat-square&label=Pages%20Deploy)](https://github.com/ada20204/four-seasons-forest-shop/actions/workflows/deploy-pages.yml)
+[![Three.js](https://img.shields.io/badge/Three.js-0.170-111111?style=flat-square&logo=threedotjs)](https://threejs.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-c89e64?style=flat-square)](./LICENSE)
 
-1. **双层错落建筑、四季橱窗换装与微缩岛屿（[createBoutiqueBuilding.js](src/scene/createBoutiqueBuilding.js), [createIslandBase.js](src/scene/createIslandBase.js), [createOutdoorPatio.js](src/scene/createOutdoorPatio.js)）**
-   - 深色碎砾石自然边界浮岛、环形天然鹅卵石景石护边与曲折奶霜砂岩步石小径。
-   - 一层深灰叠石砌体墙 + 温润竖向木格栅立面 + 通透玻璃橱窗与挑檐射灯，室内包含木纹地面、双层（1F/2F）挂衣架、收银展示台叠放毛衣与礼服人台。
-   - **橱窗四季真正换装（`updateWardrobe`）**：春樱柔粉薄纱裙与莫兰迪粉绿挂衣、盛夏米麻轻纱配鼠尾草绿亚麻陈列、金秋焦糖廓形连衣裙搭浅驼色披肩、皑雪象牙礼服配酒红绒面肩部披肩（`LatheGeometry` 立体剪裁，`capeWeight` 平滑显隐与垂坠缩放）及深松绿/勃艮第冬季成衣序列。
-   - 二层错动挑出白色微灰泥方盒体块 + 全景横窗 + 前侧内置垂蔓花槽；右侧户外休闲露台配置奶油布面遮阳伞、木质圆桌椅与带有机明暗微晃的铜框玻璃烛灯（`setCandleWeight` 多谐波微动），四周点缀庭院矮灯柱。
+[在线预览 (GitHub Pages)](https://ada20204.github.io/four-seasons-forest-shop/) · [快速运行](#快速开始) · [交互控制](#交互与url参数) · [工程架构](#工程架构)
 
-2. **四季轮换与晴昼/暮色/月夜昼夜光影系统（[seasonPresets.js](src/scene/seasonPresets.js), [timePresets.js](src/scene/timePresets.js), [lightingConfig.js](src/scene/lightingConfig.js)）**
-   - 支持正交自由组合 **SPRING · 春樱 / SUMMER · 盛夏 / AUTUMN · 金秋 / WINTER · 皑雪** 四季与 **DAY · 晴昼 / DUSK · 暮色 / NIGHT · 月夜** 三个时段，共 `4 × 3 = 12` 种完整时空氛围；可开启「流转」自动进行 28 秒往复日夜渐变，点击`晴昼 ↔ 月夜`也会平滑经过暮色弧线切换。
-   - **空间太阳/月光轨迹与 PBR 阴影质感**：主光源与补光随时间在天穹弧线平滑推移，同步联动天穹线性 HDR 弧幕、低角日落杏金散射、高天程序化满月月海与闪烁星野（随相机方位角产生微视差），同时收敛夜间 `RoomEnvironment` IBL 漫反射并切换 `N8AOPostPass` 至深靛阴影色、动态调整 `BloomEffect` 阈值（晴昼 `3.15` → 暮色 `1.54` → 月夜 `1.24`），保留微灰泥、叠石、雪枕与木格栅的立体光影质感。
-   - **夜间暖光层次**：暮色与月夜下自动点亮户外庭院矮灯柱、露台茶桌铜框玻璃烛灯（[createOutdoorPatio.js](src/scene/createOutdoorPatio.js)）并增强双层玻璃橱窗暖光溢出，并在冬季夜间收敛雪面自发光（`setNightWeight`），使冷冽蓝调月影雪面与室内暖金陈设形成高反差对比。
+<br />
 
-3. **冬季连续厚雪系统（[createWinterSnow.js](src/scene/createWinterSnow.js)）**
-   - **地面连片积雪**：绕步石与建筑边界连续起伏的自然雪被，辅以合批实例化的矮灌木/蕨类/玉簪/景石与柱顶雪包（`groundMoundInst`）。
-   - **建筑与露台厚雪**：二层主屋顶、一层错层偏屋顶与二楼花槽上方配置带有平滑倒角与檐口垂坠的雕塑雪枕；遮阳伞顶面、桌面与椅面均有独立雪垫。
-   - **乔木与针叶雪冠**：落叶乔木枝干上分布多层平滑多叶云朵状雪枕（保留顶点平滑法线，避免棱面硬边），针叶柏树与小松树附着雪簇。
+<img src="./assets/readme/hero-winter-night.webp" width="100%" alt="四季林间服装店皑雪月夜 3D 全景：厚雪屋顶、明月星夜、暖光玻璃橱窗与深靛自适应控制台" />
 
-4. **四季粒子系统与夏夜萤火虫（[createSeasonalParticles.js](src/scene/createSeasonalParticles.js), [assemblyController.js](src/core/assemblyController.js)）**
-   - 四季对应飘落粒子：**夏** 58 粒林间微尘光点（暮色/月夜自动伴生 `44` 粒暖金闪烁萤火虫）、**春** 130 瓣落樱花瓣、**秋** 125 片金红落叶、**冬** 165 片飘雪（支持随时开关）。
-   - `AssemblyController` 分 4 个阶段依次落位：Layer 0 岛屿基底与景石 → Layer 1 一层建筑与室内陈设 → Layer 2 二层白墙体块与花槽 → Layer 3 乔木灌木、户外茶座与冬雪（支持“跳过动画 / 重播入场”与 `?noIntro=1`）。
-
-5. **GPU 零开销微风动画、节制自适应 HUD 与合批优化（[createBotanicalGarden.js](src/scene/createBotanicalGarden.js), [geometryUtils.js](src/core/geometryUtils.js), [style.css](src/style.css)）**
-   - 通过共享着色器注入 `applyVertexBreeze`（绑定 `uTime` 与分季 `uWindStrength`，春 `1.05` / 夏 `0.95` / 秋 `1.15` / 冬 `0.42` 阻尼），对阔叶乔木、针叶松柏、林间蕨类、薰衣草花穗及二楼垂蔓常春藤（`anchorY` 向下垂摆）施加零额外 Draw Call 的柔和顶点微风晃动。
-   - 通过 `mergeTransformedGeometry` 合并蕨类、玉簪、花穗/绣球灌木及二楼花槽重复叶片，并将地面小型雪包整合为 `InstancedMesh`，将场景渲染 Draw Calls 控制在 `907` 左右。
-   - HUD 玻璃态主题随晴昼（暖象牙）、暮色（烟紫珀金）、月夜（深靛琥珀）自适应切换，并在竖屏窄屏下动态适配相机纵向 FOV 与底部三行紧凑胶囊控件条（`390×844` 视口下 HUD 高度 `108px`，占比 `14.2%`，无横向溢出）。
+</div>
 
 ---
 
-## 交互控制
+## 四季风貌与昼夜流转
 
-- **鼠标 / 触控**：左键拖拽旋转 · 滚轮缩放 · 右键平移
-- **底部控制栏**：
-  - 季节切换：`春` / `夏` / `秋` / `冬`
-  - 光影时段：`晴昼` / `暮色` / `月夜`
-  - 动作按钮：`流转: 关/开` · `飘落: 开/关` · `重播入场`（入场中显示为 `跳过动画`） · `复位视角`
-  - 视角预设：`默认三分之四` / `左前方` / `右前方` / `高位侧面` / `背面` / `橱窗近景`
-- **键盘快捷键**：
-  - `1` – `6`：切换 6 个相机视角预设
-  - `Q` / `W` / `E` / `A`（或 `[` / `]` / `←` / `→`）：切换 春 / 夏 / 秋 / 冬 四季
-  - `7` / `8` / `9`：切换 晴昼 / 暮色 / 月夜（`D` 循环切换时段）
-  - `L`：开关昼夜自动流转
-  - `P`：开关季节飘落粒子
-  - `R`：复位默认视角
-- **URL 启动参数**：
-  - `?season=spring|summer|autumn|winter`：指定初始季节
-  - `?time=day|golden|night`：指定初始昼夜时段
-  - `?cycle=1`：开启自动昼夜流转
-  - `?noIntro=1`：跳过组装入场动画直接展示完整成景
+应用内置 **SPRING · 春樱 / SUMMER · 盛夏 / AUTUMN · 金秋 / WINTER · 皑雪** 四季状态与 **DAY · 晴昼 / DUSK · 暮色 / NIGHT · 月夜** 三个光影时段，共 `4 × 3 = 12` 种正交氛围组合，并支持平滑往复渐变。
+
+<table>
+  <tr>
+    <td width="50%" align="center">
+      <img src="./assets/readme/season-spring-day.webp" width="100%" alt="春樱晴昼：落樱树冠、粉绿灌木与柔和象牙控台" />
+      <br />
+      <sub><strong>SPRING · 晴昼春樱</strong> — 粉樱树冠、花境地被与 130 瓣飘落花瓣</sub>
+    </td>
+    <td width="50%" align="center">
+      <img src="./assets/readme/season-summer-dusk.webp" width="100%" alt="盛夏暮色：低角暖金日落与烟紫珀金 HUD" />
+      <br />
+      <sub><strong>SUMMER · 暮色流金</strong> — 杏金天穹过渡、暖光挑檐与露台灯火初亮</sub>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" align="center">
+      <img src="./assets/readme/season-autumn-day.webp" width="100%" alt="金秋晴昼：橙金枫桦叶冠与大地色系陈列" />
+      <br />
+      <sub><strong>AUTUMN · 晴昼金秋</strong> — 金橙秋叶林冠与 125 片林间飘零秋叶</sub>
+    </td>
+    <td width="50%" align="center">
+      <img src="./assets/readme/season-summer-night.webp" width="100%" alt="盛夏月夜：满月星野与 44 粒夏夜萤火虫" />
+      <br />
+      <sub><strong>SUMMER · 月夜萤火</strong> — 满月海月光、闪烁星野与 44 粒暖金萤火虫</sub>
+    </td>
+  </tr>
+</table>
+
+<p align="center">
+  <img src="./assets/readme/showcase-winter-wardrobe.webp" width="92%" alt="皑雪橱窗近景：象牙礼服搭配酒红绒面肩部披肩、上下双层冬季成衣挂架与 2F 常春藤" />
+  <br />
+  <sub><strong>橱窗四季换装近景（WINTER · 皑雪）</strong> — 人台自动切换为象牙礼服 + <code>LatheGeometry</code> 酒红绒面肩部披肩，1F/2F 成衣挂架与收银台叠放毛衣同步换季</sub>
+</p>
 
 ---
 
-## 本地开发、构建与自动化验证
+## 核心技术特性
+
+- **100% 本地程序化 3D 场景生成**：微灰泥墙面、叠石砌体、竖向木格栅、砾石砂岩地面与植物 Alpha 贴图均在本地 Canvas2D 与几何模块离线生成，无任何外部第三方闭源模型或运行时 CDN 资源请求。
+- **物理光影与空间昼夜轨线**：主光源与补光随太阳/月光弧线推移，联动线性 HDR 天穹、高天满月与星野视差、`RoomEnvironment` 夜间 IBL 收敛、`N8AOPostPass` 深靛环境光遮蔽、动态 `BloomEffect` 阈值以及 `ToneMappingMode.AGX` 色调映射。
+- **橱窗四季真正换装（`updateWardrobe`）**：春樱柔粉薄纱裙、盛夏米麻轻纱、金秋焦糖廓形裙配浅驼披肩、皑雪象牙礼服配酒红绒面披肩（`capeWeight` 控制平滑显隐与垂坠比例），上下双层挂衣架与毛衣叠堆联动换色。
+- **零额外 Draw Call GPU 微风系统**：通过着色器注入 `applyVertexBreeze`（绑定 `uTime` 与分季风力 `uWindStrength`，冬雪自动阻尼至 `0.42`），驱动阔叶树、针叶柏松、蕨类、薰衣草花穗与二楼垂蔓常春藤；配合茶桌烛火多谐波有机明暗微晃。
+- **冬季连续厚雪与合批优化**：地面起伏雪被 + 屋顶/遮阳伞/桌面独立雪枕 + 多叶平滑树冠雪团；利用 `mergeTransformedGeometry` 与 `InstancedMesh` 将场景渲染稳定在 `907` Draw Calls 左右。
+- **分层积木入场动画与响应式 HUD**：`AssemblyController` 分 4 个阶段构建岛屿、一层、二层与林木冬雪；底部玻璃态控制台在 `390×844` 窄屏下自动折叠为 `108px` 紧凑胶囊栏（占比 `14.2%`，零横向溢出）。
+
+---
+
+## 快速开始
+
+### 环境要求
+
+- **Node.js** `>= 20.0.0`（已测试 `v22.22.3`）
+- **npm** `>= 10`
 
 ### 安装与运行
 
 ```bash
+git clone https://github.com/ada20204/four-seasons-forest-shop.git
+cd four-seasons-forest-shop
 npm install
-npm run dev       # 启动 Vite 开发服务器（默认 127.0.0.1:4174）
-npm run build     # 生成生产构建到 dist/（vite.config.js 中 base 为 /forest-shop/）
-npm run preview   # 本地预览生产构建（默认 127.0.0.1:4174）
+npm run dev
 ```
 
-> 若需部署到根路径 `/` 而非 `/forest-shop/`，可调整 `vite.config.js` 中的 `base` 配置后重新构建。
+### 常用工程命令
 
-### 自动化浏览器验证
+| 命令 | 用途 |
+| :--- | :--- |
+| `npm run dev` | 启动 Vite 开发服务器（`127.0.0.1:4174`） |
+| `npm run lint` | 运行 ESLint 静态检查 |
+| `npm run format:check` | 检查 Prettier 代码格式规范 |
+| `npm run build` | 按默认 `/forest-shop/` 基础路径构建到 `dist/`（可通过 `.env` / `VITE_BASE_PATH` 覆盖） |
+| `npm run build:root` | 以根路径 `/` 构建生产产物（适合独立域名自托管） |
+| `npm run build:gh-pages` | 以 `/four-seasons-forest-shop/` 构建 GitHub Pages 产物 |
+| `npm run check` | 串行执行 `lint` + `format:check` + `build` 全量门禁 |
+| `npm run verify:e2e` | 拉起 `vite preview` 并使用无头 Firefox + `geckodriver` 跑通多季节/昼夜/橱窗/移动端端到端验证 |
 
-验证脚本会在独立端口（`4175`）拉起 `vite preview`，并通过无头 Firefox + `geckodriver` 自动校验组装入场、四季粒子数量、轨道拖拽缩放、6 机位截图与 `390×844` 移动端 HUD 布局：
+---
 
-```bash
-npm run build
-node scripts/verify-stage2.mjs
+## 交互与 URL 参数
+
+- **鼠标 / 触控**：左键拖拽旋转 · 滚轮缩放 · 右键平移
+- **底部控制台**：四季切换（`春 / 夏 / 秋 / 冬`）、光影时段（`晴昼 / 暮色 / 月夜`）、昼夜自动流转、飘落开关、重播/跳过入场、视角预设（默认三分之四 / 左前方 / 右前方 / 高位侧面 / 背面 / 橱窗近景）
+- **键盘快捷键**：
+  - `1` – `6`：切换 6 组相机视角
+  - `Q` / `W` / `E` / `A`（或 `[` / `]` / `←` / `→`）：切换春 / 夏 / 秋 / 冬
+  - `7` / `8` / `9`：切换晴昼 / 暮色 / 月夜（`D` 循环切换）
+  - `L` 开关自动流转 · `P` 开关季节粒子 · `R` 复位视角
+- **URL 启动参数**：
+  - `?season=spring|summer|autumn|winter`
+  - `?time=day|golden|night`
+  - `?cycle=1`（开启昼夜自动流转）
+  - `?noIntro=1`（跳过积木入场动画）
+
+---
+
+## 工程架构
+
+```text
+four-seasons-forest-shop/
+├── .github/workflows/
+│   ├── ci.yml                     # PR 与 main 推送触发 lint + format + build 检查
+│   └── deploy-pages.yml           # main 推送自动构建并发布到 GitHub Pages
+├── assets/readme/                 # README 展示用精选 WebP 实拍截图
+├── scripts/
+│   └── verify-e2e.mjs             # 无头 Firefox + geckodriver 自动化端到端验证脚本
+├── src/
+│   ├── core/
+│   │   ├── assemblyController.js  # 四阶段分层积木组装入场控制器
+│   │   └── geometryUtils.js       # 几何变换合并批处理与实例化工具
+│   ├── materials/
+│   │   └── studioMaterials.js     # Canvas2D 程序化纹理、PBR 材质工厂与全局着色器 uniform
+│   ├── scene/
+│   │   ├── createBotanicalGarden.js   # 乔木、松柏、地被花园与 GPU 微风着色器注入
+│   │   ├── createBoutiqueBuilding.js  # 双层精品店建筑、1F/2F 陈设与四季人台换装
+│   │   ├── createIslandBase.js        # 砾石浮岛基底、景石护边与砂岩步石小径
+│   │   ├── createOutdoorPatio.js      # 户外遮阳伞茶座与有机明暗微晃玻璃烛灯
+│   │   ├── createSeasonalParticles.js # 樱花、落叶、飞雪与夏夜萤火虫粒子系统
+│   │   ├── createWinterSnow.js        # 地面雪被、建筑屋顶/露台/树冠平滑雪枕
+│   │   ├── lightingConfig.js          # Three.js / N8AO / Bloom / PMREM 渲染管线参数
+│   │   ├── seasonPresets.js           # 四季色彩、风力阻尼与橱窗服饰配置表
+│   │   └── timePresets.js             # 晴昼 / 暮色 / 月夜轨道光影与天穹配色插值预设
+│   ├── main.js                    # 主渲染循环、交互控制、后期合成与调试钩子
+│   └── style.css                  # 自适应玻璃态三时段主题 HUD 样式
+├── .editorconfig
+├── .env.example                   # VITE_BASE_PATH 基础路径配置示例
+├── .prettierrc.json
+├── eslint.config.mjs
+├── index.html
+├── LICENSE
+├── package.json
+└── vite.config.js                 # 子路径代理兼容、环境变量化 base 与 Rollup 分包配置
 ```
 
 ---
 
-## 依赖清单、资产来源与开源许可
+## 核心依赖与开源许可
 
-本应用所有 3D 架构/地形/植物网格与表面材质贴图均 **100% 在本地离线程序化生成**，无任何外部第三方闭源模型或运行时 CDN 资源请求。
-
-| 依赖 / 资产 | 版本 | 许可协议 | 用途说明 |
+| 依赖 | 版本 | 许可协议 | 作用 |
 | :--- | :--- | :--- | :--- |
-| `three` | `^0.170.0` (实装 `0.170.0`) | `MIT` | WebGL 核心渲染、阴影、环境贴图与几何体处理 |
-| `@dgreenheck/ez-tree` | `^1.1.0` (实装 `1.1.0`) | `MIT` | 程序化生成两侧主体落叶乔木树干、分枝与树冠枝叶点位 |
-| `n8ao` | `^2.0.2` (实装 `2.0.2`) | `ISC` | 屏幕空间环境光遮蔽（SSAO），强化白墙体块、檐口与雪堆立体阴影 |
-| `postprocessing` | `^6.39.6` (实装 `6.39.6`) | `Zlib` | 后期效果合成、`BloomEffect`、`ToneMappingMode.AGX` 与 `SMAAEffect` |
-| `@fontsource/cormorant-garamond` | `^5.3.0` (实装 `5.3.0`) | `OFL-1.1` | 英文衬线副标题展示字体（随包本地构建，无外链） |
-| `@fontsource/inter` | `^5.3.0` (实装 `5.3.0`) | `OFL-1.1` | 界面正文字体（随包本地构建，无外链） |
-| `vite` (`devDependency`) | `^6.0.0` (实装 `6.4.6`) | `MIT` | 开发热更新与 Rollup 生产打包 |
-| 自研程序化贴图与几何 | 项目内嵌 | 自有 / 随仓库 | [studioMaterials.js](src/materials/studioMaterials.js) 在 Canvas2D 生成微灰泥、叠石、木纹、砾石、砂岩、卵石、雪纹及植物 Alpha 叶片贴图 |
+| `three` | `0.170.0` | MIT | WebGL 核心渲染、阴影与几何体构建 |
+| `@dgreenheck/ez-tree` | `1.1.0` | MIT | 两侧主体落叶乔木树干与分枝点位程序化生成 |
+| `n8ao` | `2.0.2` | ISC | 屏幕空间环境光遮蔽（SSAO） |
+| `postprocessing` | `6.39.6` | Zlib | 后期合成、`BloomEffect`、`AGX` 色调映射与 `SMAAEffect` |
+| `@fontsource/cormorant-garamond` | `5.3.0` | OFL-1.1 | 衬线标题展示字体（随包离线构建） |
+| `@fontsource/inter` | `5.3.0` | OFL-1.1 | HUD 界面字体（随包离线构建） |
 
----
+## 实测结果与已知边界
 
-## 实测验证与已知边界
+- **分包构建（`npm run check` / Vite `6.4.6`）**：业务主包已通过 `manualChunks` 独立拆分为 `index-*.js`（`115.91 kB`，gzip `39.41 kB`），与 `vendor-three`（`516.87 kB`）、`vendor-postfx`（`316.99 kB`）、`vendor-three-addons`（`20.98 kB`）及内嵌树叶贴图的 `vendor-eztree`（`3,998.25 kB`）分离缓存。
+- **自动化验证（`npm run verify:e2e`，无头 Firefox WebGL）**：`errors: []`、`midAssemblyActive: true`、四季粒子与橱窗换装（含秋冬披肩显隐）全部断言通过，夏夜萤火虫 `44` 粒、流转进度正常推进并平稳收敛；`390×844` 窄屏下 HUD 高度 `108px`（占比 `14.2%`，无横向溢出），`calls: 907`、`triangles: 678,930`。
+- **已知边界**：移动端视口数据基于桌面端无头浏览器 `390×844` 模拟测量，尚未在真机（iOS Safari / Android Chrome）实测双指触控手感与移动端 GPU 实际帧率；GPU 顶点微风与烛火明暗动画已校验着色器无报错编译及静态帧渲染，尚未单独录制动态视频帧比对。
 
-### 已验证运行环境（`npm run build` + `node scripts/verify-stage2.mjs`）
-
-- **构建产物（Vite `6.4.6`）**：`dist/index.html` (`4.61 kB`)、`dist/assets/index-CzzmQq-G.css` (`15.17 kB`)、`dist/assets/index-qmRZQrWF.js` (`4,968.03 kB`，gzip `3,319.97 kB`) 及全部本地 `.woff`/`.woff2` 字体资源。
-- **桌面端渲染与交互（Linux 无头 Firefox WebGL）**：
-  - 控制台/页面报错数：`0`（`errors: []`）
-  - 组装入场中段态检测：`midAssemblyActive: true`
-  - 轨道拖拽偏移：`dragDelta: 27.1`；滚轮缩放位移：`zoomDelta: 5.816`
-  - 四季粒子统计：`summer: 58`、`spring: 130`、`autumn: 125`、`winter: 165`（关闭清零为 `0`，恢复为 `165`）
-  - 橱窗四季换装检测：
-    - `spring`：主礼服 `#f5bfd2`、腰带 `#b96e84`、`capeVisible: false`
-    - `summer`：主礼服 `#efe4cf`、腰带 `#c49b68`、`capeVisible: false`
-    - `autumn`：主礼服 `#c2834d`、腰带 `#5b341e`、肩部披肩 `#d9ae7e`（`capeWeight: 0.65`, `capeVisible: true`）
-    - `winter`：主礼服 `#f4efe6`、腰带 `#6e262f`、酒红绒面披肩 `#561b24`（`capeWeight: 1`, `capeVisible: true`）
-  - 昼夜时段与夏夜萤火虫检测：盛夏月夜 `time: "night"`、`theme: "theme-night"`、`fireflies: 44`，点击流转开关 `autoCycle: true` 进度连续推进，切至 `月夜` 后平滑收敛并自动停止流转
-- **移动端窄屏视口模拟（无头 Firefox `390×844` 竖屏，`winter` + `night`）**：
-  - HUD 高度：`108px`（占可视高度 `14.2%`），横向溢出 `hudOverflowX: false`
-  - 帧绘制统计：`calls: 907`，`triangles: 678,930`
-
-### 未测试环境说明
-
-- 以上移动端结果基于桌面端浏览器的 `390×844` 响应式视口模拟；**尚未在真实物理触摸终端（iOS Safari / Android Chrome 真机）**上进行双指触控手感、高刷屏功耗与移动端 GPU 实际帧率实测；GPU 顶点微风晃动与露台烛火明暗微晃已确认静态渲染与着色器编译无报错，尚未单独录制动态视频帧比对。
-
----
-
-## 与静态 AI 概念参考图的客观差异说明
-
-本项目旨在以交互式实时 3D 复现“轻奢林间服装店”微缩艺术画面的神韵，与静态 2D AI 生成图相比存在以下真实架构差异：
-
-1. **冬雪树冠覆盖策略**：AI 概念图中树木冠层近乎被高饱和绒毛感大雪团整体密封覆盖；实时 WebGL 版在主枝干冠层生成平滑过渡的多叶云朵雪枕，保留适量底层冷绿冬叶穿插，兼顾了任意角度旋转的通透层次感与实时 `N8AO` / 帧率开销。
-2. **橱窗暖光浓度与背景明暗对比**：AI 图采用局部 2700K 高饱和琥珀色室内补光；实时版统一遵循 `ToneMappingMode.AGX` 物理色调映射与高阈值泛光，室内呈现出干净柔和的米暖质感，避免纯白雪面或墙体出现高光过曝。
-3. **植物叶片写意度与步石露面处理**：乔木与地被植物采用 `ez-tree` 与合批 Alpha 叶片卡片构建，微观叶缘锯齿较 AI 手绘插画略简化；冬季庭院保留了砂岩步石中部的可读步行石面，将厚度积雪堆叠在步石四周、步石交错肩缘、入口台阶两侧、景石顶部与连续雪地上。
+本项目基于 [MIT License](./LICENSE) 开源。

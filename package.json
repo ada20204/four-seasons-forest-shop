@@ -1,12 +1,30 @@
 {
   "name": "four-seasons-forest-shop",
   "version": "1.0.0",
+  "description": "Interactive Three.js 3D miniature forest boutique showcasing four seasons, day-to-night lighting, seasonal storefront wardrobe tailoring, GPU vertex breeze, and sculpted winter snow.",
   "private": true,
+  "license": "MIT",
   "type": "module",
+  "homepage": "https://ada20204.github.io/four-seasons-forest-shop/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ada20204/four-seasons-forest-shop.git"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "build:gh-pages": "VITE_BASE_PATH=/four-seasons-forest-shop/ vite build",
+    "build:root": "VITE_BASE_PATH=/ vite build",
+    "preview": "vite preview",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write \"src/**/*.{js,css}\" \"scripts/**/*.mjs\" index.html vite.config.js eslint.config.mjs",
+    "format:check": "prettier --check \"src/**/*.{js,css}\" \"scripts/**/*.mjs\" index.html vite.config.js eslint.config.mjs",
+    "verify:e2e": "node scripts/verify-e2e.mjs",
+    "check": "npm run lint && npm run format:check && npm run build"
   },
   "dependencies": {
     "@dgreenheck/ez-tree": "^1.1.0",
@@ -17,6 +35,10 @@
     "three": "^0.170.0"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.0.3",
+    "globals": "^17.5.0",
+    "prettier": "^3.8.3",
     "vite": "^6.0.0"
   }
 }
